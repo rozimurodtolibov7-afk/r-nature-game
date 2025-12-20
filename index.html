@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>R-Nature World</title>
+    <style>
+        :root {
+            --bg-color: #e0f2f1;
+            --grass-color: #81c784;
+            --accent: #ffb74d;
+            --glass: rgba(255, 255, 255, 0.25);
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(180deg, #81d4fa 0%, var(--bg-color) 100%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* O'yin maydoni */
+        #game-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 10px;
+            padding: 20px;
+            background: var(--glass);
+            backdrop-filter: blur(10px);
+            border-radius: 30px;
+            border: 1px solid rgba(255,255,255,0.5);
+            margin-top: 50px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+        }
+
+        .cell {
+            width: 60px;
+            height: 60px;
+            background: rgba(255,255,255,0.3);
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 30px;
+            transition: transform 0.2s, background 0.3s;
+            cursor: pointer;
+        }
+
+        .cell:active {
+            transform: scale(0.9);
+        }
+
+        /* Yuqori Panel */
+        .header {
+            width: 90%;
+            display: flex;
+            justify-content: space-between;
+            padding: 20px;
+            margin-top: 20px;
+        }
+
+        .stat-card {
+            background: var(--glass);
+            padding: 10px 20px;
+            border-radius: 20px;
+            backdrop-filter: blur(5px);
+            font-weight: bold;
+            color: #2c3e50;
+            border: 1px solid white;
+        }
+
+        /* Pastki menyu */
+        .bottom-nav {
+            position: fixed;
+            bottom: 30px;
+            display: flex;
+            gap: 20px;
+        }
+
+        .btn {
+            background: white;
+            padding: 15px 25px;
+            border-radius: 25px;
+            border: none;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+            font-weight: bold;
+            color: #4caf50;
+            transition: all 0.3s;
+        }
+
+        .btn:hover {
+            background: #4caf50;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <div class="stat-card">💰 1,250 RC</div>
+        <div class="stat-card">🌟 Level 5</div>
+    </div>
+
+    <div id="game-grid">
+        <div class="cell">🌱</div>
+        <div class="cell">🍉</div>
+        <div class="cell"></div>
+        <div class="cell">🍅</div>
+        <div class="cell"></div>
+        </div>
+
+    <div class="bottom-nav">
+        <button class="btn">🛒 Do'kon</button>
+        <button class="btn" style="color: #fb8c00;">📦 Sandiq</button>
+    </div>
+
+</body>
+</html>
