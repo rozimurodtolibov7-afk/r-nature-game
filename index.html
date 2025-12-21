@@ -3,91 +3,85 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>R-Nature: Cartoon Edition</title>
+    <title>R-Nature: International</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         * { -webkit-tap-highlight-color: transparent; box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
-        body { font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; overflow: hidden; background-color: #2ecc71; }
+        body { font-family: 'Comic Sans MS', cursive, sans-serif; overflow: hidden; background: #2ecc71; color: #2c3e50; }
 
-        /* MULTFILM USLUBIDAGI FON */
+        /* TIL TANLASH EKRANI */
+        #lang-screen {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: #fff; z-index: 3000; display: flex; flex-direction: column; align-items: center; padding: 20px;
+        }
+        .lang-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; width: 100%; margin-top: 20px; }
+        .lang-btn { background: #f1f1f1; border: 3px solid #eee; padding: 15px; border-radius: 15px; text-align: center; font-weight: bold; cursor: pointer; }
+        .lang-btn:active { background: #e0e0e0; }
+
+        /* ASOSIY MENU */
         #menu-screen {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: linear-gradient(rgba(0,0,0,0.3), rgba(0,0,0,0.3)), 
-                        url('https://img.freepik.com/free-vector/nature-forest-landscape-background_1308-73329.jpg');
+            background: linear-gradient(rgba(0,0,0,0.3), rgba(0,0,0,0.3)), url('https://wallpapercave.com/wp/wp3105346.jpg');
             background-size: cover; background-position: center;
-            display: flex; flex-direction: column; align-items: center; justify-content: space-between;
+            display: none; flex-direction: column; align-items: center; justify-content: space-between;
             padding: 40px 20px; z-index: 1000;
         }
 
-        .title { color: white; font-size: 48px; font-weight: 900; text-shadow: 4px 4px 0px #2c3e50; letter-spacing: 2px; }
-        .balance-pill { background: rgba(255,255,255,0.9); color: #27ae60; padding: 12px 30px; border-radius: 50px; border: 3px solid #f1c40f; font-weight: bold; font-size: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
+        #game-screen { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; }
+        #nature-world { width: 100%; height: 100%; position: absolute; background: url('https://img.freepik.com/free-vector/landscape-park-with-green-grass-trees_107791-2053.jpg'); background-size: cover; }
 
-        .play-btn {
-            width: 150px; height: 150px; background: #f1c40f; color: white; border-radius: 50%;
-            display: flex; align-items: center; justify-content: center; font-size: 28px; font-weight: 900;
-            border: 8px solid white; box-shadow: 0 10px 0px #d4ac0d; cursor: pointer; transition: 0.1s;
-        }
-        .play-btn:active { transform: translateY(5px); box-shadow: 0 5px 0px #d4ac0d; }
+        .title { color: white; font-size: 45px; font-weight: 900; text-shadow: 4px 4px 0px #27ae60; }
+        .pill { background: white; padding: 8px 15px; border-radius: 20px; font-weight: bold; border: 3px solid #f1c40f; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
+        .play-btn { width: 130px; height: 130px; background: #f1c40f; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: bold; border: 8px solid white; box-shadow: 0 8px 0px #d4ac0d; }
+        .menu-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; width: 100%; }
+        .grid-btn { background: #3498db; border: 3px solid white; color: white; padding: 15px 5px; border-radius: 15px; text-align: center; font-weight: bold; box-shadow: 0 5px 0px #2980b9; }
 
-        .menu-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; width: 100%; }
-        .grid-btn { background: #3498db; border: 4px solid white; color: white; padding: 15px; border-radius: 20px; text-align: center; font-weight: bold; box-shadow: 0 6px 0px #2980b9; }
-
-        /* O'YIN MAYDONI */
-        #game-screen { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #2ecc71; }
-        #nature-world { 
-            width: 100%; height: 100%; position: absolute; z-index: 1; 
-            background-image: url('https://img.freepik.com/free-vector/cartoon-landscape-summer-green-field-with-river-clouds_107791-3184.jpg');
-            background-size: cover;
-        }
-
-        .game-ui { position: absolute; top: 0; left: 0; width: 100%; padding: 15px; display: flex; justify-content: space-between; z-index: 10; pointer-events: none; }
-        .ui-item { pointer-events: auto; background: white; padding: 10px 20px; border-radius: 20px; font-weight: bold; box-shadow: 0 4px 0px #bdc3c7; border: 2px solid #ecf0f1; }
-
-        .tools { position: absolute; bottom: 20px; right: 20px; display: flex; flex-direction: column; gap: 15px; z-index: 10; }
-        .tool-circle { width: 70px; height: 70px; background: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 32px; box-shadow: 0 6px 0px #bdc3c7; border: 3px solid #ecf0f1; }
-
-        /* MODALLAR */
         #modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 2000; align-items: center; justify-content: center; backdrop-filter: blur(5px); }
-        .modal-box { background: white; width: 90%; border-radius: 30px; padding: 25px; max-height: 80vh; overflow-y: auto; border: 6px solid #f1c40f; }
-        .shop-row { display: flex; justify-content: space-between; align-items: center; padding: 15px; border-bottom: 2px dashed #eee; }
-        .buy-btn { background: #27ae60; color: white; border: none; padding: 10px 20px; border-radius: 15px; font-weight: bold; box-shadow: 0 4px 0px #219150; }
-        .plant { position: absolute; font-size: 55px; transform: translate(-50%, -50%); pointer-events: none; z-index: 5; filter: drop-shadow(2px 4px 6px rgba(0,0,0,0.3)); animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
-        @keyframes popIn { from { transform: translate(-50%, -50%) scale(0); } to { transform: translate(-50%, -50%) scale(1); } }
+        .modal-box { background: white; width: 90%; border-radius: 25px; padding: 20px; max-height: 75vh; overflow-y: auto; border: 5px solid #3498db; }
+        .shop-row { display: flex; justify-content: space-between; align-items: center; padding: 12px; border-bottom: 2px dashed #eee; }
+        .buy-btn { background: #2ecc71; color: white; border: none; padding: 8px 12px; border-radius: 10px; font-weight: bold; box-shadow: 0 3px 0 #27ae60; }
+        .plant { position: absolute; font-size: 50px; transform: translate(-50%, -50%); pointer-events: none; z-index: 5; animation: grow 0.4s ease-out; }
     </style>
 </head>
 <body>
 
+    <div id="lang-screen">
+        <h2 style="margin-top:20px;">Choose Language</h2>
+        <div class="lang-grid" id="lang-list"></div>
+    </div>
+
     <div id="menu-screen">
         <div class="title">R-NATURE</div>
-        <div class="balance-pill">💰 <span id="m-bal">10.00</span> RC</div>
+        <div style="display:flex; gap:10px;">
+            <div class="pill">💰 <span id="m-bal">0.00</span></div>
+            <div class="pill" style="border-color:#3498db">⭐ Lvl <span id="m-lvl">1</span></div>
+        </div>
         <div class="play-btn" id="btn-play">PLAY</div>
         <div class="menu-grid">
-            <div class="grid-btn" id="btn-shop">🛒 Do'kon</div>
-            <div class="grid-btn" id="btn-rank">🏆 Rank</div>
-            <div class="grid-btn" id="btn-friends">👥 Taklif</div>
+            <div class="grid-btn" id="btn-shop">🛒</div>
+            <div class="grid-btn" id="btn-rank">🏆</div>
+            <div class="grid-btn" id="btn-friends">👥</div>
         </div>
     </div>
 
     <div id="game-screen">
-        <div class="game-ui">
-            <div class="ui-item" id="btn-back">🏠 Menu</div>
-            <div class="ui-item" style="color:#27ae60">💰 <span id="g-bal">10.00</span></div>
+        <div style="position:absolute; top:15px; left:15px; z-index:10; display:flex; gap:10px;">
+            <div class="pill" id="btn-back">🏠</div>
+            <div class="pill">💰 <span id="g-bal">0.00</span></div>
+            <div class="pill" style="border-color:#3498db">⭐ <span id="g-xp">0</span> XP</div>
         </div>
         <div id="nature-world"></div>
-        <div class="tools">
-            <button class="tool-circle" id="btn-inv">🎒</button>
-            <button class="tool-circle" style="background:#f1c40f" id="btn-game-shop">🛒</button>
-        </div>
-        <div id="status-bar" style="position:absolute; bottom:15px; left:15px; color:white; font-size:14px; background:rgba(0,0,0,0.6); padding:8px 15px; border-radius:20px; z-index:10; border:1px solid rgba(255,255,255,0.3);">
-            Tanlangan: <span id="selected-name" style="font-weight:bold; color:#f1c40f">Hech narsa</span>
+        <div style="position:absolute; bottom:30px; right:20px; display:flex; flex-direction:column; gap:15px; z-index:10;">
+            <button class="play-btn" style="width:65px; height:65px; font-size:30px;" id="btn-inv">🎒</button>
+            <button class="play-btn" style="width:65px; height:65px; font-size:30px; background:#f1c40f;" id="btn-game-shop">🛒</button>
         </div>
     </div>
 
     <div id="modal-overlay">
         <div class="modal-box">
-            <h2 id="modal-title" style="text-align:center; margin-bottom:20px; color:#2c3e50; font-size:28px;"></h2>
+            <h2 id="modal-title" style="text-align:center; margin-bottom:15px;"></h2>
             <div id="modal-list"></div>
-            <button id="modal-close" style="width:100%; margin-top:20px; padding:15px; background:#e74c3c; color:white; border:none; border-radius:20px; font-weight:bold; font-size:18px; box-shadow: 0 5px 0px #c0392b;">Yopish</button>
+            <button id="modal-close" style="width:100%; margin-top:15px; padding:12px; background:#e74c3c; color:white; border:none; border-radius:15px; font-weight:bold;">Close</button>
         </div>
     </div>
 
@@ -95,72 +89,79 @@
         const tg = window.Telegram.WebApp;
         tg.expand();
 
-        let data = JSON.parse(localStorage.getItem('rn_v8_save')) || {
-            bal: 10.00,
-            inv: { "Atirgul": 1 },
-            planted: []
+        const languages = {
+            'uz': { play: "O'YIN", shop: "Do'kon", rank: "Reyting", invite: "Taklif", back: "Menyu", inv: "Sandiq", close: "Yopish", low: "Mablag' yetarli emas!", lvlup: "Daraja oshdi!" },
+            'ru': { play: "ИГРАТЬ", shop: "Магазин", rank: "Рейтинг", invite: "Друзья", back: "Меню", inv: "Рюкзак", close: "Закрыть", low: "Недостаточно средств!", lvlup: "Новый уровень!" },
+            'en': { play: "PLAY", shop: "Shop", rank: "Rank", invite: "Invite", back: "Menu", inv: "Bag", close: "Close", low: "Not enough money!", lvlup: "Level Up!" },
+            'tr': { play: "OYNAT", shop: "Mağaza", rank: "Sıralama", invite: "Davet", back: "Menü", inv: "Çanta", close: "Kapat", low: "Yetersiz bakiye!", lvlup: "Seviye Atladın!" },
+            'de': { play: "SPIELEN", shop: "Laden", rank: "Rang", invite: "Einladen", back: "Menü", inv: "Tasche", close: "Schließen", low: "Nicht genug Geld!", lvlup: "Level Aufstieg!" },
+            'fr': { play: "JOUER", shop: "Boutique", rank: "Rang", invite: "Inviter", back: "Menu", inv: "Sac", close: "Fermer", low: "Pas assez d'argent!", lvlup: "Niveau Supérieur!" },
+            'es': { play: "JUGAR", shop: "Tienda", rank: "Rango", invite: "Invitar", back: "Menú", inv: "Bolsa", close: "Cerrar", low: "¡Dinero insuficiente!", lvlup: "¡Nivel completado!" },
+            'ar': { play: "لعب", shop: "متجر", rank: "ترتيب", invite: "دعوة", back: "قائمة", inv: "حقيبة", close: "إغلاق", low: "رصيد غير كاف!", lvlup: "ارتفاع المستوى!" },
+            'hi': { play: "खेलें", shop: "दुकान", rank: "रैंक", invite: "आमंत्रित", back: "मेनू", inv: "झोला", close: "बंद करें", low: "पर्याप्त पैसे नहीं!", lvlup: "स्तर ऊपर!" },
+            'zh': { play: "玩", shop: "商店", rank: "排行", invite: "邀请", back: "菜单", inv: "背包", close: "关闭", low: "余额不足!", lvlup: "等级提升!" }
         };
 
-        // MEVALAR VA FOYDA TIZIMI
-        const items = [
-            { n: "Atirgul", p: 10, i: "🌹", income: 0.05 },
-            { n: "Qulupnay", p: 25, i: "🍓", income: 0.08 },
-            { n: "Gilos", p: 45, i: "🍒", income: 0.12 },
-            { n: "Pomidor", p: 60, i: "🍅", income: 0.15 },
-            { n: "Uzum", p: 85, i: "🍇", income: 0.20 },
-            { n: "Qovun", p: 110, i: "🍈", income: 0.25 },
-            { n: "Tarvuz", p: 140, i: "🍉", income: 0.35 },
-            { n: "Ananas", p: 180, i: "🍍", income: 0.50 },
-            { n: "Olma darxti", p: 250, i: "🍎", income: 0.75 },
-            { n: "Kaktus", p: 300, i: "🌵", income: 1.00 }
-        ];
+        const langFlags = { 'uz': '🇺🇿 O\'zbek', 'ru': '🇷🇺 Русский', 'en': '🇺🇸 English', 'tr': '🇹🇷 Türkçe', 'de': '🇩🇪 Deutsch', 'fr': '🇫🇷 Français', 'es': '🇪🇸 Español', 'ar': '🇸🇦 العربية', 'hi': '🇮🇳 हिन्दी', 'zh': '🇨🇳 中文' };
 
-        let selected = null;
+        let data = JSON.parse(localStorage.getItem('rn_v11_save')) || {
+            bal: 10.00, xp: 0, lvl: 1, inv: { "Atirgul": 1 }, planted: [], lang: null
+        };
 
-        function setupBtn(id, action) {
-            const el = document.getElementById(id);
-            el.onclick = (e) => { e.preventDefault(); action(); };
+        function initLang() {
+            const list = document.getElementById('lang-list');
+            for(let code in langFlags) {
+                const b = document.createElement('div');
+                b.className = 'lang-btn';
+                b.innerText = langFlags[code];
+                b.onclick = () => { data.lang = code; save(); startMenu(); };
+                list.appendChild(b);
+            }
+            if(data.lang) startMenu();
         }
 
-        setupBtn('btn-play', () => {
-            document.getElementById('menu-screen').style.display = 'none';
-            document.getElementById('game-screen').style.display = 'block';
-            renderPlanted();
-        });
-
-        setupBtn('btn-back', () => {
-            document.getElementById('game-screen').style.display = 'none';
+        function startMenu() {
+            document.getElementById('lang-screen').style.display = 'none';
             document.getElementById('menu-screen').style.display = 'flex';
+            const l = languages[data.lang];
+            document.getElementById('btn-play').innerText = l.play;
+            document.getElementById('btn-shop').innerText = "🛒 " + l.shop;
+            document.getElementById('btn-rank').innerText = "🏆 " + l.rank;
+            document.getElementById('btn-friends').innerText = "👥 " + l.invite;
+            document.getElementById('modal-close').innerText = l.close;
+            document.getElementById('btn-back').innerText = "🏠 " + l.back;
             updateUI();
-        });
+        }
 
+        const items = [
+            { n: "Atirgul", p: 10, i: "🌹", inc: 0.1, xp: 5 },
+            { n: "Qulupnay", p: 40, i: "🍓", inc: 0.5, xp: 15 },
+            { n: "Gilos", p: 80, i: "🍒", inc: 1.2, xp: 30 },
+            { n: "Kaktus", p: 500, i: "🌵", inc: 8.0, xp: 150 }
+        ];
+
+        function setupBtn(id, action) { document.getElementById(id).onclick = (e) => { e.preventDefault(); action(); }; }
+
+        setupBtn('btn-play', () => { document.getElementById('menu-screen').style.display = 'none'; document.getElementById('game-screen').style.display = 'block'; renderPlanted(); });
+        setupBtn('btn-back', () => { document.getElementById('game-screen').style.display = 'none'; document.getElementById('menu-screen').style.display = 'flex'; });
         setupBtn('btn-shop', () => openShop());
         setupBtn('btn-game-shop', () => openShop());
-       setupBtn('btn-inv', () => openInv());
+        setupBtn('btn-inv', () => openInv());
         setupBtn('modal-close', () => document.getElementById('modal-overlay').style.display = 'none');
-        setupBtn('btn-rank', () => tg.showAlert("🏆 Reyting tizimi tez kunda ishga tushadi!"));
-        
-        setupBtn('btn-friends', () => {
-            const shareUrl = "https://t.me/RPlayNatureBot";
-            const text = "Men bilan birga o'z tabiat olamingni yarat! 🌿✨";
-            tg.openTelegramLink("https://t.me/share/url?url=" + encodeURIComponent(shareUrl) + "&text=" + encodeURIComponent(text));
-        });
 
         function openShop() {
-            document.getElementById('modal-title').innerText = "Do'kon 🛒";
-            const list = document.getElementById('modal-list');
-            list.innerHTML = '';
+            const l = languages[data.lang];
+            document.getElementById('modal-title').innerText = l.shop;
+            const list = document.getElementById('modal-list'); list.innerHTML = '';
             items.forEach(item => {
                 const row = document.createElement('div');
                 row.className = 'shop-row';
-                row.innerHTML = "<span>" + item.i + " " + item.n + "</span> <button class='buy-btn'>" + item.p + " RC</button>";
+                row.innerHTML = `<span>${item.i} ${item.n}</span> <button class='buy-btn'>${item.p} RC</button>`;
                 row.querySelector('button').onclick = () => {
                     if(data.bal >= item.p) {
-                        data.bal -= item.p;
-                        data.inv[item.n] = (data.inv[item.n] || 0) + 1;
-                        save(); updateUI(); openShop();
-                        tg.HapticFeedback.notificationOccurred('success');
-                    } else { tg.showAlert("Mablag' yetarli emas!"); }
+                        data.bal -= item.p; data.inv[item.n] = (data.inv[item.n] || 0) + 1;
+                        save(); updateUI(); openShop(); tg.HapticFeedback.notificationOccurred('success');
+                    } else { tg.showAlert(l.low); }
                 };
                 list.appendChild(row);
             });
@@ -168,79 +169,52 @@
         }
 
         function openInv() {
-            document.getElementById('modal-title').innerText = "Sandiq 🎒";
-            const list = document.getElementById('modal-list');
-            list.innerHTML = '';
-            let empty = true;
-            for(let name in data.inv) {
-                if(data.inv[name] > 0) {
-                    empty = false;
-                    const icon = items.find(i => i.n === name).i;
+            document.getElementById('modal-title').innerText = languages[data.lang].inv;
+            const list = document.getElementById('modal-list'); list.innerHTML = '';
+            for(let n in data.inv) {
+                if(data.inv[n] > 0) {
+                    const icon = items.find(i => i.n === n).i;
                     const row = document.createElement('div');
                     row.className = 'shop-row';
-                    row.innerHTML = "<span>" + icon + " " + name + " (" + data.inv[name] + " ta)</span> <button class='buy-btn' style='background:#3498db; box-shadow: 0 4px 0 #2980b9;'>Ekish</button>";
-                    row.querySelector('button').onclick = () => {
-                        selected = name;
-                        document.getElementById('selected-name').innerText = name;
-                        document.getElementById('modal-overlay').style.display = 'none';
-                    };
+                    row.innerHTML = `<span>${icon} ${n} (${data.inv[n]})</span> <button class='buy-btn' style='background:#3498db'>PLAY</button>`;
+                    row.querySelector('button').onclick = () => { selected = n; document.getElementById('modal-overlay').style.display = 'none'; };
                     list.appendChild(row);
                 }
             }
-            if(empty) list.innerHTML = "<p style='text-align:center; color:#7f8c8d;'>Sandiq hozircha bo'sh...</p>";
             document.getElementById('modal-overlay').style.display = 'flex';
         }
 
         document.getElementById('nature-world').onclick = (e) => {
             if(!selected || data.inv[selected] <= 0) return;
-            const itemObj = items.find(i => i.n === selected);
-            const p = { x: e.clientX, y: e.clientY, i: itemObj.i, n: itemObj.n };
-            data.planted.push(p);
-            data.inv[selected]--;
-            if(data.inv[selected] <= 0) {
-                selected = null;
-                document.getElementById('selected-name').innerText = "Hech narsa";
-            }
-            draw(p);
-            save(); updateUI();
-            tg.HapticFeedback.impactOccurred('medium');
+            const item = items.find(i => i.n === selected);
+            const p = { x: e.clientX, y: e.clientY, i: item.i, n: item.n };
+            data.planted.push(p); data.inv[selected]--; data.xp += item.xp;
+            if(data.xp >= data.lvl * 100) { data.lvl++; data.bal += 50; tg.showAlert(languages[data.lang].lvlup); }
+            draw(p); save(); updateUI(); tg.HapticFeedback.impactOccurred('medium');
         };
 
         function draw(p) {
-            const el = document.createElement('div');
-            el.className = 'plant';
-            el.style.left = p.x + 'px'; el.style.top = p.y + 'px';
-            el.innerText = p.i;
+            const el = document.createElement('div'); el.className = 'plant';
+            el.style.left = p.x + 'px'; el.style.top = p.y + 'px'; el.innerText = p.i;
             document.getElementById('nature-world').appendChild(el);
         }
 
-        function renderPlanted() {
-            const world = document.getElementById('nature-world');
-            world.innerHTML = '';
-            data.planted.forEach(draw);
-        }
+        function renderPlanted() { document.getElementById('nature-world').innerHTML = ''; data.planted.forEach(draw); }
         function updateUI() {
             document.getElementById('m-bal').innerText = data.bal.toFixed(2);
             document.getElementById('g-bal').innerText = data.bal.toFixed(2);
+            document.getElementById('m-lvl').innerText = data.lvl;
+            document.getElementById('g-xp').innerText = data.xp;
         }
-
-        function save() { localStorage.setItem('rn_v8_save', JSON.stringify(data)); }
-
-        // DAROMAD TIZIMI: Har 10 soniyada o'simliklar RC keltiradi
+        function save() { localStorage.setItem('rn_v11_save', JSON.stringify(data)); }
+        
         setInterval(() => {
-            if(data.planted.length > 0) {
-                let currentIncome = 0;
-                data.planted.forEach(p => {
-                    const found = items.find(it => it.n === p.n);
-                    if(found) currentIncome += found.income;
-                });
-                data.bal += currentIncome;
-                updateUI();
-                save();
-            }
+            let inc = 0;
+            data.planted.forEach(p => { const it = items.find(i => i.n === p.n); if(it) inc += it.inc; });
+            if(inc > 0) { data.bal += inc; updateUI(); save(); }
         }, 10000);
 
-        updateUI();
+        initLang();
     </script>
 </body>
-</html> 
+</html>
