@@ -3,70 +3,86 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>R-Nature: Ultimate Evolution</title>
+    <title>R-Nature: 10 Languages Edition</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
     <style>
         * { -webkit-tap-highlight-color: transparent; box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
-        body { font-family: 'Comic Sans MS', cursive, sans-serif; overflow: hidden; background: #2ecc71; color: #2c3e50; transition: 1s; }
+        body { font-family: 'Comic Sans MS', cursive, sans-serif; overflow: hidden; background: #2ecc71; }
 
-        /* MULTFILM FONI */
-        #lang-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #fff; z-index: 3000; display: flex; flex-direction: column; align-items: center; padding: 20px; }
-        #menu-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(rgba(0,0,0,0.2), rgba(0,0,0,0.2)), url('https://wallpapercave.com/wp/wp3105346.jpg'); background-size: cover; background-position: center; display: none; flex-direction: column; align-items: center; justify-content: space-between; padding: 40px 20px; z-index: 1000; }
-        #game-screen { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; }
-        #nature-world { width: 100%; height: 100%; position: absolute; background: url('https://img.freepik.com/free-vector/landscape-park-with-green-grass-trees_107791-2053.jpg'); background-size: cover; background-position: center; }
+        #nature-world { 
+            width: 100%; height: 100%; position: absolute; 
+            background: url('https://img.freepik.com/free-vector/landscape-park-with-green-grass-trees_107791-2053.jpg'); 
+            background-size: cover; background-position: center; 
+        }
 
-        /* UI ELEMENTLARI */
-        .title { color: white; font-size: 45px; font-weight: 900; text-shadow: 4px 4px 0px #27ae60; text-align: center; }
-        .pill { background: white; padding: 8px 15px; border-radius: 20px; font-weight: bold; border: 3px solid #f1c40f; box-shadow: 0 4px 10px rgba(0,0,0,0.2); display: flex; align-items: center; gap: 5px; }
-        .play-btn { width: 120px; height: 120px; background: #f1c40f; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 22px; font-weight: bold; border: 6px solid white; box-shadow: 0 6px 0px #d4ac0d; }
-        .menu-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; width: 100%; }
-        .grid-btn { background: #3498db; border: 3px solid white; color: white; padding: 12px 5px; border-radius: 15px; text-align: center; font-weight: bold; box-shadow: 0 4px 0px #2980b9; font-size: 13px; }
-
-        /* MODAL VA DO'KON */
-        #modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 2000; align-items: center; justify-content: center; backdrop-filter: blur(5px); }
-        .modal-box { background: white; width: 90%; border-radius: 25px; padding: 20px; max-height: 75vh; overflow-y: auto; border: 5px solid #3498db; }
-        .shop-row { display: flex; justify-content: space-between; align-items: center; padding: 12px; border-bottom: 2px dashed #eee; }
-        .buy-btn { background: #2ecc71; color: white; border: none; padding: 8px 12px; border-radius: 10px; font-weight: bold; box-shadow: 0 3px 0 #27ae60; }
-
-        /* O'SIMLIK VA EFFEKTLAR */
-        .plant { position: absolute; font-size: 40px; transform: translate(-50%, -50%); pointer-events: none; z-index: 5; transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        /* TILLAR EKRANI */
+        #lang-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #fff; z-index: 3000; display: flex; flex-direction: column; align-items: center; padding: 20px; overflow-y: auto; }
         .lang-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; width: 100%; margin-top: 20px; }
-        .lang-btn { background: #f8f9fa; border: 2px solid #ddd; padding: 12px; border-radius: 12px; text-align: center; font-weight: bold; }
-        .rain { position: absolute; width: 2px; height: 10px; background: rgba(255,255,255,0.6); top: -20px; z-index: 100; pointer-events: none; animation: fall 0.8s linear infinite; }
-        @keyframes fall { to { transform: translateY(100vh); } }
+        
+        #menu-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.3); display: none; flex-direction: column; align-items: center; justify-content: space-between; padding: 40px 20px; z-index: 1000; }
+        #game-screen { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; }
+
+        .title { color: white; font-size: 40px; font-weight: 900; text-shadow: 3px 3px 0px #27ae60; text-align: center; }
+        
+        /* RC COIN STYLE */
+        .pill { 
+            background: rgba(255,255,255,0.9); padding: 5px 12px; border-radius: 25px; 
+            font-weight: bold; border: 2px solid #f1c40f; display: flex; align-items: center; gap: 8px; 
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        .rc-icon { width: 24px; height: 24px; }
+
+        .play-btn { width: 110px; height: 110px; background: #f1c40f; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: bold; border: 5px solid white; box-shadow: 0 6px 0px #d4ac0d; }
+        
+        .menu-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; width: 100%; }
+        .grid-btn { background: #3498db; border: 2px solid white; color: white; padding: 10px 5px; border-radius: 12px; text-align: center; font-weight: bold; font-size: 12px; }
+
+        #modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 2000; align-items: center; justify-content: center; backdrop-filter: blur(5px); }
+        .modal-box { background: white; width: 90%; border-radius: 20px; padding: 20px; max-height: 70vh; overflow-y: auto; border: 4px solid #3498db; }
+        .shop-row { display: flex; justify-content: space-between; align-items: center; padding: 10px; border-bottom: 1px dashed #ddd; }
+        .buy-btn { background: #2ecc71; color: white; border: none; padding: 6px 12px; border-radius: 8px; font-weight: bold; }
+        
+        .plant { position: absolute; font-size: 40px; transform: translate(-50%, -50%); pointer-events: none; }
+        .lang-item { background: #f1c40f; color: white; padding: 12px; border-radius: 10px; text-align: center; font-weight: bold; border: 2px solid #fff; box-shadow: 0 3px 0 #d4ac0d; }
     </style>
 </head>
 <body>
 
     <div id="lang-screen">
-        <h2 style="margin:20px 0;">Choose Language</h2>
+        <h2 style="margin-top:20px;">Choose Language</h2>
         <div class="lang-grid" id="lang-list"></div>
     </div>
 
     <div id="menu-screen">
         <div class="title">R-NATURE</div>
-        <div style="display:flex; gap:10px; justify-content: center;">
-            <div class="pill">💰 <span id="m-bal">0.00</span></div>
+        <div style="display:flex; gap:10px;">
+            <div class="pill">
+                <img src="https://i.ibb.co/VWVmD4H/1000003914.png" class="rc-icon"> <span id="m-bal">0.00</span>
+            </div>
             <div class="pill" style="border-color:#3498db">⭐ Lvl <span id="m-lvl">1</span></div>
         </div>
         <div class="play-btn" id="btn-play">PLAY</div>
         <div class="menu-grid">
-            <div class="grid-btn" id="btn-shop">🛒</div>
-            <div class="grid-btn" id="btn-rank">🏆</div>
-            <div class="grid-btn" id="btn-friends">👥</div>
+            <div class="grid-btn" onclick="openShop()" id="txt-shop">🛒 Shop</div>
+            <div class="grid-btn" onclick="openRank()" id="txt-rank">🏆 Rank</div>
+            <div class="grid-btn" onclick="invite()" id="txt-invite">👥 Invite</div>
         </div>
     </div>
 
     <div id="game-screen">
         <div style="position:absolute; top:15px; left:15px; z-index:10; display:flex; gap:10px;">
-            <div class="pill" id="btn-back">🏠</div>
-            <div class="pill">💰 <span id="g-bal">0.00</span></div>
-            <div class="pill" style="border-color:#3498db">⭐ <span id="g-xp">0</span></div>
+            <div class="pill" onclick="goBack()">🏠</div>
+            <div class="pill">
+                <img src="https://i.ibb.co/VWVmD4H/1000003914.png" class="rc-icon">
+                <span id="g-bal">0.00</span>
+            </div>
         </div>
         <div id="nature-world"></div>
         <div style="position:absolute; bottom:30px; right:20px; display:flex; flex-direction:column; gap:15px; z-index:10;">
-            <button class="play-btn" style="width:65px; height:65px; font-size:30px;" id="btn-inv">🎒</button>
-            <button class="play-btn" style="width:65px; height:65px; font-size:30px; background:#f1c40f;" id="btn-game-shop">🛒</button>
+            <button class="play-btn" style="width:60px; height:60px; font-size:25px;" onclick="openInv()">🎒</button>
+            <button class="play-btn" style="width:60px; height:60px; font-size:25px; background:#f1c40f;" onclick="openShop()">🛒</button>
         </div>
     </div>
 
@@ -74,192 +90,186 @@
         <div class="modal-box">
             <h2 id="modal-title" style="text-align:center; margin-bottom:15px;"></h2>
             <div id="modal-list"></div>
-            <button id="modal-close" style="width:100%; margin-top:15px; padding:12px; background:#e74c3c; color:white; border:none; border-radius:15px; font-weight:bold;">Close</button>
+            <button onclick="closeModal()" id="txt-close" style="width:100%; margin-top:15px; padding:12px; background:#e74c3c; color:white; border:none; border-radius:12px; font-weight:bold;">Close</button>
         </div>
     </div>
 
     <script>
+        // FIREBASE
+        const firebaseConfig = {
+            apiKey: "AIzaSyBK57eb0Wr_x2x-PFC-a5PAzqBzdKMeic",
+            authDomain: "r-nature.firebaseapp.com",
+            projectId: "r-nature",
+            databaseURL: "https://r-nature-default-rtdb.firebaseio.com/",
+            storageBucket: "r-nature.firebasestorage.app",
+            messagingSenderId: "504684708516",
+            appId: "1:504684708516:web:c4545ae8a8b94bc0391c31"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
         const tg = window.Telegram.WebApp;
-        tg.expand();
+        const uid = tg.initDataUnsafe.user ? tg.initDataUnsafe.user.id : "test_888";
 
-        const languages = {
-            'uz': { play: "O'YIN", shop: "Do'kon", rank: "Reyting", invite: "Taklif", back: "Menyu", inv: "Sandiq", close: "Yopish", low: "RC yetarli emas!", lvlup: "Yangi daraja!", rank_title: "Top Bog'bonlar", daily: "Xush kelibsiz! Bonus +25 RC 🎁", rain_msg: "Yomg'ir yog'moqda! Hosil 2 baravar tez o'sadi! 🌧️" },
-            'en': { play: "PLAY", shop: "Shop", rank: "Rank", invite: "Invite", back: "Menu", inv: "Bag", close: "Close", low: "Not enough RC!", lvlup: "Level Up!", rank_title: "Top Gardeners", daily: "Welcome! Daily Bonus +25 RC 🎁", rain_msg: "It's raining! Growth is 2x faster! 🌧️" },
-            'ru': { play: "ИГРАТЬ", shop: "Магазин", rank: "Рейтинг", invite: "Друзья", back: "Меню", inv: "Рюкзак", close: "Закрыть", low: "Мало RC!", lvlup: "Новый уровень!", rank_title: "Топ Садоводов", daily: "Привет! Бонус +25 RC 🎁", rain_msg: "Идет дождь! Рост в 2 раза быстрее! 🌧️" }
-        };
-
-        const langFlags = { 'uz': '🇺🇿 O\'zbek', 'en': '🇺🇸 English', 'ru': '🇷🇺 Русский' };
-
-        let data = JSON.parse(localStorage.getItem('rn_v15_save')) || {
-            bal: 20.00, xp: 0, lvl: 1, inv: { "Atirgul": 1 }, planted: [], lang: null, last_claim: ""
-        };
-
-        const items = [
-            { n: "Atirgul", p: 10, i: "🌹", inc: 0.2, xp: 10, type: 'p' },
-            { n: "Qulupnay", p: 50, i: "🍓", inc: 1.0, xp: 25, type: 'p' },
-            { n: "Gilos", p: 120, i: "🍒", inc: 2.5, xp: 50, type: 'p' },
-            { n: "Kaktus", p: 500, i: "🌵", inc: 8.0, xp: 150, type: 'p' },
-            { n: "Ketmon", p: 150, i: "⛏️", d: "+5 XP per plant", type: 't' },
-            { n: "Suv quygich", p: 600, i: "🚿", d: "+20% Income", type: 't' },
-            { n: "Fermer Robot", p: 2000, i: "🤖", d: "+2.0 RC Auto", type: 't' }
-        ];
-
-        let isRaining = false;
+        let user = { bal: 20.0, xp: 0, lvl: 1, inv: {"Flower": 1}, planted: [], lang: null, name: tg.initDataUnsafe.user?.first_name || "Gamer" };
         let selected = null;
 
-        function initLang() {
-            const list = document.getElementById('lang-list');
-            for(let code in langFlags) {
-                const b = document.createElement('div'); b.className = 'lang-btn'; b.innerText = langFlags[code];
-                b.onclick = () => { data.lang = code; save(); startMenu(); checkDaily(); };
-                list.appendChild(b);
-            }
-            if(data.lang) { startMenu(); checkDaily(); }
-        }
+        // 10 TA TIL LUG'ATI
+        const langs = {
+            uz: {shop:"Do'kon", rank:"Reyting", invite:"Taklif", buy:"Sotib olish", sow:"Ekish", close:"Yopish", rank_t:"Top Bog'bonlar", empty:"Sandiq bo'sh"},
+            en: {shop:"Shop", rank:"Rank", invite:"Invite", buy:"Buy", sow:"Sow", close:"Close", rank_t:"Top Gardeners", empty:"Inventory empty"},
+            ru: {shop:"Магазин", rank:"Рейтинг", invite:"Друзья", buy:"Купить", sow:"Посеять", close:"Закрыть", rank_t:"Топ Садоводов", empty:"Сумка пуста"},
+            tr: {shop:"Mağaza", rank:"Sıralama", invite:"Davet et", buy:"Satın al", sow:"Ek", close:"Kapat", rank_t:"En İyi Bahçıvanlar", empty:"Envanter boş"},
+            tj: {shop:"Дӯкон", rank:"Рейтинг", invite:"Даъват", buy:"Харидан", sow:"Коштан", close:"Пӯшидан", rank_t:"Беҳтаринҳо", empty:"Халта холӣ аст"},
+            de: {shop:"Laden", rank:"Rang", invite:"Einladen", buy:"Kaufen", sow:"Säen", close:"Schließen", rank_t:"Top Gärtner", empty:"Inventar leer"},
+            fr: {shop:"Boutique", rank:"Rang", invite:"Inviter", buy:"Acheter", sow:"Semer", close:"Fermer", rank_t:"Top Jardiniers", empty:"Inventaire vide"},
+            es: {shop:"Tienda", rank:"Rango", invite:"Invitar", buy:"Comprar", sow:"Sembrar", close:"Cerrar", rank_t:"Top Jardineros", empty:"Inventario vacío"},
+            pt: {shop:"Loja", rank:"Ranking", invite:"Convidar", buy:"Comprar", sow:"Semear", close:"Fechar", rank_t:"Top Jardineiros", empty:"Inventário vazio"},
+            it: {shop:"Negozio", rank:"Classifica", invite:"Invita", buy:"Comprare", sow:"Seminare", close:"Chiudi", rank_t:"Top Giardinieri", empty:"Inventario vuoto"}
+        };
 
-        function startMenu() {
+        const flags = {uz:"🇺🇿 O'zbek", en:"🇺🇸 English", ru:"🇷🇺 Русский", tr:"🇹🇷 Türkçe", tj:"🇹🇯 Тоҷикӣ", de:"🇩🇪 Deutsch", fr:"🇫🇷 Français", es:"🇪🇸 Español", pt:"<pt> Português", it:"🇮🇹 Italiano"};
+
+        const shopItems = [
+            { id: "Flower", n: {uz:"Atirgul", en:"Rose", ru:"Роза", tr:"Gül", tj:"Гули садбарг", de:"Rose", fr:"Rose", es:"Rosa", pt:"Rosa", it:"Rosa"}, p: 10, i: "🌹", inc: 0.2 },
+            { id: "Strawberry", n: {uz:"Qulupnay", en:"Strawberry", ru:"Клубника", tr:"Çilek", tj:"Клубника", de:"Erdbeere", fr:"Fraise", es:"Fresa", pt:"Morango", it:"Fragola"}, p: 50, i: "🍓", inc: 1.0 },
+            { id: "Robot", n: {uz:"Robot", en:"Robot", ru:"Робот", tr:"Robot", tj:"Робот", de:"Roboter", fr:"Robot", es:"Robot", pt:"Robô", it:"Robot"}, p: 500, i: "🤖", inc: 3.0 }
+        ];
+
+        function setLang(c) { user.lang = c; save(); start(); }
+
+        function start() {
             document.getElementById('lang-screen').style.display = 'none';
             document.getElementById('menu-screen').style.display = 'flex';
-            const l = languages[data.lang];
-            document.getElementById('btn-play').innerText = l.play;
-            document.getElementById('btn-shop').innerText = "🛒 " + l.shop;
-            document.getElementById('btn-rank').innerText = "🏆 " + l.rank;
-            document.getElementById('btn-friends').innerText = "👥 " + l.invite;
-            updateUI(); startWeather();
+            const l = langs[user.lang];
+            document.getElementById('txt-shop').innerText = "🛒 " + l.shop;
+            document.getElementById('txt-rank').innerText = "🏆 " + l.rank;
+            document.getElementById('txt-invite').innerText = "👥 " + l.invite;
+            document.getElementById('txt-close').innerText = l.close;
+            updateUI();
         }
 
-        function checkDaily() {
-            const today = new Date().toDateString();
-            if(data.last_claim !== today) {
-                data.bal += 25; data.last_claim = today;
-                tg.showAlert(languages[data.lang].daily);
-                save(); updateUI();
-            }
+        function updateUI() {
+            document.getElementById('m-bal').innerText = user.bal.toFixed(2);
+            document.getElementById('g-bal').innerText = user.bal.toFixed(2);
+            document.getElementById('m-lvl').innerText = user.lvl;
         }
 
-        function setupBtn(id, action) { document.getElementById(id).onclick = (e) => { e.preventDefault(); action(); }; }
-
-        setupBtn('btn-play', () => { document.getElementById('menu-screen').style.display = 'none'; document.getElementById('game-screen').style.display = 'block'; renderPlanted(); });
-        setupBtn('btn-back', () => { document.getElementById('game-screen').style.display = 'none'; document.getElementById('menu-screen').style.display = 'flex'; });
-        setupBtn('btn-shop', () => openShop());
-        setupBtn('btn-game-shop', () => openShop());
-        setupBtn('btn-inv', () => openInv());
-        setupBtn('modal-close', () => document.getElementById('modal-overlay').style.display = 'none');
-        
-        setupBtn('btn-friends', () => {
-            tg.openTelegramLink(`https://t.me/share/url?url=https://t.me/RPlayNatureBot&text=${encodeURIComponent("Tabiatni birga quramiz! 🌿")}`);
-        });
-
-        setupBtn('btn-rank', () => {
-            const l = languages[data.lang];
-            document.getElementById('modal-title').innerText = l.rank_title;
-            const top = [ {n: "Siz", b: data.bal}, {n: "Robot_Gardner", b: 1500}, {n: "Nature_King", b: 850} ].sort((a,b)=>b.b-a.b);
-            document.getElementById('modal-list').innerHTML = top.map((p,i)=>`<div class='shop-row'><span>${i+1}. ${p.n}</span> <span>${p.b.toFixed(0)} RC</span></div>`).join('');
-            document.getElementById('modal-overlay').style.display = 'flex';
-        });
-
+        // DO'KONNI KO'RSATISH
         function openShop() {
-            const l = languages[data.lang];
+            const l = langs[user.lang];
             document.getElementById('modal-title').innerText = l.shop;
-            const list = document.getElementById('modal-list'); list.innerHTML = '';
-            items.forEach(item => {
-                const row = document.createElement('div'); row.className = 'shop-row';
-                const info = item.type === 't' ? `<br><small>${item.d}</small>` : '';
-                row.innerHTML = `<span>${item.i} ${item.n}${info}</span> <button class='buy-btn'>${item.p} RC</button>`;
-                row.querySelector('button').onclick = () => {
-                    if(data.bal >= item.p) {
-                        data.bal -= item.p; data.inv[item.n] = (data.inv[item.n] || 0) + 1;
-                        save(); updateUI(); openShop(); tg.HapticFeedback.notificationOccurred('success');
-                    } else { tg.showAlert(l.low); }
-                };
-                list.appendChild(row);
+            let html = "";
+            shopItems.forEach(item => {
+                html += `<div class="shop-row">
+                    <span>${item.i} ${item.n[user.lang]} (${item.p} RC)</span>
+                    <button class="buy-btn" onclick="buy('${item.id}')">${l.buy}</button>
+                </div>`;
             });
+            document.getElementById('modal-list').innerHTML = html;
             document.getElementById('modal-overlay').style.display = 'flex';
         }
+
+        window.buy = (id) => {
+            const it = shopItems.find(i => i.id === id);
+            if(user.bal >= it.p) {
+                user.bal -= it.p;
+                user.inv[id] = (user.inv[id] || 0) + 1;
+                updateUI(); save();
+            } else { tg.showAlert("No RC!"); }
+        };
 
         function openInv() {
-            document.getElementById('modal-title').innerText = languages[data.lang].inv;
-            const list = document.getElementById('modal-list'); list.innerHTML = '';
-            for(let n in data.inv) {
-                if(data.inv[n] > 0) {
-                    const item = items.find(i => i.n === n);
-                    if(item.type === 't') continue;
-                    const row = document.createElement('div'); row.className = 'shop-row';
-                    row.innerHTML = `<span>${item.i} ${n} (${data.inv[n]})</span> <button class='buy-btn' style='background:#3498db'>SOW</button>`;
-                    row.querySelector('button').onclick = () => { selected = n; document.getElementById('modal-overlay').style.display = 'none'; };
-                    list.appendChild(row);
+            const l = langs[user.lang];
+            document.getElementById('modal-title').innerText = l.shop;
+            let html = "";
+            for(let id in user.inv) {
+                if(user.inv[id] > 0 && id !== "Robot") {
+                    const it = shopItems.find(i => i.id === id);
+                    html += `<div class="shop-row">
+                        <span>${it.i} ${it.n[user.lang]} (${user.inv[id]})</span>
+                        <button class="buy-btn" style="background:#3498db" onclick="selectItem('${id}')">${l.sow}</button>
+                    </div>`;
                 }
             }
+            document.getElementById('modal-list').innerHTML = html || l.empty;
             document.getElementById('modal-overlay').style.display = 'flex';
         }
 
+        window.selectItem = (id) => { selected = id; closeModal(); };
+
         document.getElementById('nature-world').onclick = (e) => {
-            if(!selected || data.inv[selected] <= 0) return;
-            const item = items.find(i => i.n === selected);
-            const p = { x: e.clientX, y: e.clientY, finalIcon: item.i, n: item.n, stage: 0, born: Date.now() };
-            data.planted.push(p); data.inv[selected]--;
-            let xpG = item.xp + (data.inv["Ketmon"] ? 5 : 0);
-            data.xp += xpG;
-            if(data.xp >= data.lvl * 150) { data.lvl++; data.bal += 100; tg.showAlert(languages[data.lang].lvlup); }
-            draw(p); save(); updateUI(); tg.HapticFeedback.impactOccurred('medium');
-            if(data.inv[selected] <= 0) selected = null;
+            if(!selected || !user.inv[selected]) return;
+            const it = shopItems.find(i => i.id === selected);
+            const p = { x: e.clientX, y: e.clientY, i: it.i, id: it.id, born: Date.now() };
+            user.planted.push(p);
+            user.inv[selected]--;
+            user.xp += 10;
+            if(user.xp >= user.lvl * 100) { user.lvl++; user.bal += 50; }
+            draw(p); updateUI(); save();
         };
 
         function draw(p) {
             const el = document.createElement('div'); el.className = 'plant'; el.id = 'p-' + p.born;
             el.style.left = p.x + 'px'; el.style.top = p.y + 'px';
-            el.innerText = p.stage === 0 ? "🫘" : (p.stage === 1 ? "🌱" : p.finalIcon);
+            const age = (Date.now() - p.born)/1000;
+            el.innerText = age < 10 ? "🫘" : (age < 20 ? "🌱" : p.i);
             document.getElementById('nature-world').appendChild(el);
         }
 
-        setInterval(() => {
-            data.planted.forEach(p => {
-                const diff = (Date.now() - p.born) / 1000;
-                let growthRate = isRaining ? 2 : 1;
-                let changed = false;
-                if(p.stage === 0 && diff * growthRate > 10) { p.stage = 1; changed = true; }
-                else if(p.stage === 1 && diff * growthRate > 30) { p.stage = 2; changed = true; }
-                if(changed) { const el = document.getElementById('p-' + p.born); if(el) el.innerText = p.stage === 1 ? "🌱" : p.finalIcon; }
+        function openRank() {
+            db.ref('users').orderByChild('bal').limitToLast(10).once('value').then(snap => {
+                let players = [];
+                snap.forEach(c => players.push(c.val()));
+                players.reverse();
+                document.getElementById('modal-title').innerText = langs[user.lang].rank_t;
+                document.getElementById('modal-list').innerHTML = players.map((p,i) => 
+                    `<div class="shop-row"><span>${i+1}. ${p.name || 'User'}</span><span>${p.bal.toFixed(0)} RC</span></div>`
+                ).join('');
+                document.getElementById('modal-overlay').style.display = 'flex';
             });
-        }, 1000);
-
-        function startWeather() {
-            setInterval(() => {
-                if(Math.random() > 0.7) {
-                    isRaining = true; makeRain();
-                    tg.showAlert(languages[data.lang].rain_msg);
-                    document.body.style.filter = "brightness(0.8)";
-                    setTimeout(() => { isRaining = false; document.body.style.filter = "none"; }, 15000);
-                }
-            }, 60000);
         }
 
-        function makeRain() {
-            for(let i=0; i<30; i++) {
-                const d = document.createElement('div'); d.className = 'rain';
-                d.style.left = Math.random() * 100 + 'vw'; d.style.animationDelay = Math.random() + 's';
-                document.body.appendChild(d); setTimeout(()=>d.remove(), 2000);
+        function invite() { tg.openTelegramLink(`https://t.me/share/url?url=https://t.me/RPlayNatureBot&text=Play with me!`); }
+        function closeModal() { document.getElementById('modal-overlay').style.display = 'none'; }
+        function goBack() { document.getElementById('game-screen').style.display = 'none'; document.getElementById('menu-screen').style.display = 'flex'; }
+        document.getElementById('btn-play').onclick = () => { document.getElementById('menu-screen').style.display = 'none'; document.getElementById('game-screen').style.display = 'block'; render(); };
+
+        function render() {
+            document.getElementById('nature-world').innerHTML = '';
+            if(user.planted) user.planted.forEach(draw);
+        }
+
+        function save() { db.ref('users/' + uid).set(user); }
+
+        function load() {
+            // Til tanlash ro'yxatini chiqarish
+            const ldiv = document.getElementById('lang-list');
+            for(let key in flags) {
+                const b = document.createElement('div'); b.className = 'lang-item';
+                b.innerText = flags[key]; b.onclick = () => setLang(key);
+                ldiv.appendChild(b);
             }
-        }
 
-        function renderPlanted() { document.getElementById('nature-world').innerHTML = ''; data.planted.forEach(draw); }
-        function updateUI() {
-            document.getElementById('m-bal').innerText = data.bal.toFixed(2);
-            document.getElementById('g-bal').innerText = data.bal.toFixed(2);
-            document.getElementById('m-lvl').innerText = data.lvl;
-            document.getElementById('g-xp').innerText = data.xp;
+            db.ref('users/' + uid).once('value').then(snap => {
+                if(snap.exists()) {
+                    user = snap.val();
+                    if(!user.planted) user.planted = [];
+                    if(!user.inv) user.inv = {};
+                    if(user.lang) start();
+                }
+            });
         }
 
         setInterval(() => {
             let inc = 0;
-            data.planted.forEach(p => { if(p.stage === 2) { const it = items.find(i => i.n === p.n); inc += it.inc; } });
-            if(data.inv["Suv quygich"]) inc *= 1.2;
-            if(data.inv["Fermer Robot"]) inc += 2.0;
-            if(inc > 0) { data.bal += inc; updateUI(); save(); }
+            if(user.planted) {
+                user.planted.forEach(p => { if((Date.now()-p.born)/1000 > 20) inc += shopItems.find(i=>i.id===p.id).inc; });
+            }
+            if(user.inv["Robot"]) inc += 3.0;
+            if(inc > 0) { user.bal += inc; updateUI(); save(); }
         }, 10000);
 
-        function save() { localStorage.setItem('rn_v15_save', JSON.stringify(data)); }
-        initLang();
+        load();
     </script>
 </body>
 </html>
