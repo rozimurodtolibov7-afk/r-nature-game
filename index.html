@@ -3,189 +3,257 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>R-Nature Game</title>
+    <title>R-Nature Game v5</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        body { margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; overflow: hidden; background-color: #1a1a1a; touch-action: manipulation; }
+        * { -webkit-tap-highlight-color: transparent; box-sizing: border-box; }
+        body { margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; overflow: hidden; background-color: #1a1a1a; color: white; }
         
-        /* Start Screen */
-        #start-screen {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+        /* ASOSIY EKRAN (MENU) */
+        #main-menu {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
             background: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('https://images.unsplash.com/photo-1502082553048-f009c37129b9?auto=format&fit=crop&w=1000&q=80');
             background-size: cover; background-position: center;
-            display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 9999;
+            display: flex; flex-direction: column; align-items: center; justify-content: space-between;
+            padding: 40px 20px; z-index: 1000;
         }
+
+        .menu-top { text-align: center; }
+        .menu-top h1 { font-size: 45px; margin: 0; letter-spacing: 3px; text-shadow: 2px 2px 10px #000; }
+        .balance-display { background: rgba(0,0,0,0.7); padding: 10px 25px; border-radius: 30px; margin-top: 15px; font-weight: bold; border: 1px solid #f1c40f; }
+
         .play-btn {
-            padding: 20px 80px; font-size: 26px; font-weight: bold; color: white;
-            background: #27ae60; border: none; border-radius: 50px; cursor: pointer;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.4); animation: pulse 2s infinite;
+            width: 150px; height: 150px; background: #27ae60; color: white;
+            border: none; border-radius: 50%; font-size: 24px; font-weight: bold;
+            box-shadow: 0 0 30px rgba(39, 174, 96, 0.6); cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            border: 5px solid rgba(255,255,255,0.2); animation: pulse 2s infinite;
         }
-        @keyframes pulse { 0% {transform: scale(1);} 50% {transform: scale(1.05);} 100% {transform: scale(1);} }
 
-        /* Game UI */
-        #game-container { display: none; position: relative; width: 100vw; height: 100vh; background-color: #2ecc71; }
-        .top-panel { position: fixed; top: 10px; left: 10px; right: 10px; display: flex; justify-content: space-between; z-index: 1000; pointer-events: none; }
-        .stat-box { background: rgba(0,0,0,0.85); color: white; padding: 10px 18px; border-radius: 25px; font-weight: bold; pointer-events: auto; font-size: 14px; }
-        
-        .bottom-menu { position: fixed; bottom: 25px; left: 50%; transform: translateX(-50%); display: flex; gap: 12px; z-index: 2000; width: 90%; justify-content: center; }
-        .game-btn { flex: 1; padding: 15px 5px; border: none; border-radius: 15px; font-weight: bold; cursor: pointer; box-shadow: 0 5px 15px rgba(0,0,0,0.3); font-size: 13px; color: #333; }
-        .btn-gold { background: #f1c40f; }
-        .btn-blue { background: #3498db; color: white; }
+        .menu-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; width: 100%; }
+        .menu-item-btn { 
+            background: rgba(255, 255, 255, 0.15); border: 1px solid rgba(255,255,255,0.3);
+            padding: 15px 5px; border-radius: 15px; color: white; font-weight: bold; font-size: 12px;
+            display: flex; flex-direction: column; align-items: center; gap: 5px;
+        }
 
-        /* Elements */
-        .plant, .building { position: absolute; font-size: 38px; transform: translate(-50%, -50%); pointer-events: none; z-index: 10; transition: transform 0.3s; }
+        /* O'YIN MAYDONI */
+        #game-view { display: none; position: relative; width: 100vw; height: 100vh; background-color: #2ecc71; }
+        #nature-world { width: 100%; height: 100%; position: absolute; }
         
-        /* Modals */
-        .modal { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #2c3e50; border: 3px solid #f1c40f; padding: 25px; border-radius: 20px; z-index: 5000; width: 80%; color: white; box-shadow: 0 0 30px rgba(0,0,0,0.5); }
-        .modal-item { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; background: rgba(255,255,255,0.1); padding: 10px; border-radius: 12px; }
+        .game-overlay { position: absolute; width: 100%; padding: 15px; display: flex; justify-content: space-between; pointer-events: none; z-index: 100; }
+        .overlay-btn { 
+            pointer-events: auto; background: rgba(0,0,0,0.8); color: white; border: none; 
+            padding: 12px; border-radius: 50%; font-size: 20px; width: 50px; height: 50px;
+        }
+
+        /* SANDIQ VA SHOP MODAL */
+        .modal { 
+            display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); 
+            background: #2c3e50; width: 90%; max-height: 80vh; border-radius: 25px; 
+            padding: 25px; z-index: 2000; overflow-y: auto; border: 2px solid #f1c40f;
+        }
+        .item-row { 
+            display: flex; justify-content: space-between; align-items: center; 
+            background: rgba(255,255,255,0.05); padding: 12px; border-radius: 15px; margin-bottom: 10px; 
+        }
+        .buy-btn { background: #27ae60; color: white; border: none; padding: 8px 15px; border-radius: 10px; font-weight: bold; }
+        .use-btn { background: #3498db; color: white; border: none; padding: 8px 15px; border-radius: 10px; font-weight: bold; }
+
+        @keyframes pulse { 0% {transform: scale(1);} 50% {transform: scale(1.08);} 100% {transform: scale(1);} }
+        .plant { position: absolute; font-size: 40px; transform: translate(-50%, -50%); pointer-events: none; z-index: 10; }
     </style>
 </head>
 <body>
 
-    <div id="start-screen">
-        <h1 style="color: white; font-size: 42px; letter-spacing: 5px; text-shadow: 3px 3px 15px rgba(0,0,0,0.8);">R-NATURE</h1>
-        <p style="color: #eee; margin-bottom: 40px; font-style: italic;">O'z tabiyatingni yarat!</p>
-        <button id="main-play-btn" class="play-btn">PLAY</button>
-    </div>
-
-    <div id="game-container">
-        <div class="top-panel">
-            <div class="stat-box">💰 <span id="balance">10.00</span> RC</div>
-            <div class="stat-box">🌱 <span id="seed-count">5</span></div>
+    <div id="main-menu">
+        <div class="menu-top">
+            <h1>R-NATURE</h1>
+            <div class="balance-display">💰 <span id="menu-balance">10.00</span> RC</div>
         </div>
+        <button class="play-btn" onclick="goToGame()">PLAY</button>
 
-        <div id="nature-world" style="width: 100%; height: 100%;"></div>
-
-        <div class="bottom-menu">
-            <button class="game-btn btn-gold" onclick="showModal('rank-modal')">🏆 Rank</button>
-            <button class="game-btn btn-blue" onclick="showModal('shop-modal')">🛒 Shop</button>
-            <button class="game-btn btn-gold" onclick="showModal('invite-modal')">👥 Invite</button>
+        <div class="menu-grid">
+            <button class="menu-item-btn" onclick="openModal('shop-modal')"><span>🛒</span> Do'kon</button>
+            <button class="menu-item-btn" onclick="openModal('rank-modal')"><span>🏆</span> Rank</button>
+            <button class="menu-item-btn" onclick="openModal('invite-modal')"><span>👥</span> Taklif</button>
         </div>
     </div>
+
+    <div id="game-view">
+        <div class="game-overlay">
+            <button class="overlay-btn" onclick="goToMenu()">🏠</button>
+            <div style="display: flex; gap: 10px;">
+                <button class="overlay-btn" onclick="openModal('inventory-modal')">🎒</button>
+                <button class="overlay-btn" onclick="openModal('shop-modal')">🛒</button>
+            </div>
+        </div>
+        <div id="nature-world"></div>
+        <div id="selection-tip" style="position: absolute; bottom: 20px; width: 100%; text-align: center; pointer-events: none; font-weight: bold; text-shadow: 1px 1px 5px #000;">
+            Tanlangan: <span id="current-item-name">Hech narsa</span>
+        </div>
+    </div>
+
     <div id="shop-modal" class="modal">
-        <h2 style="text-align:center; color: #f1c40f;">Shop</h2>
-        <div class="modal-item">
-            <span>🌸 10x Seeds</span> 
-            <button onclick="buyItem('seeds', 1.0)" style="background:#27ae60; color:white; border:none; padding:8px 15px; border-radius:8px; font-weight:bold;">1.0 RC</button>
-        </div>
-        <div class="modal-item">
-            <span>🏠 Small House</span> 
-            <button onclick="buyItem('house', 5.0)" style="background:#27ae60; color:white; border:none; padding:8px 15px; border-radius:8px; font-weight:bold;">5.0 RC</button>
-        </div>
-        <button onclick="hideModal('shop-modal')" style="width:100%; background:#e74c3c; color:white; border:none; padding:12px; border-radius:12px; margin-top:10px; font-weight:bold;">Close</button>
+        <h2 style="text-align: center; color: #f1c40f;">Markaziy Do'kon</h2>
+        <div id="shop-items">
+            </div>
+        <button onclick="closeModal('shop-modal')" style="width:100%; padding:12px; margin-top:10px; border-radius:15px; background:#e74c3c; color:white; border:none; font-weight:bold;">Yopish</button>
     </div>
 
-    <div id="rank-modal" class="modal">
-        <h2 style="text-align:center; color: #f1c40f;">Rankings</h2>
-        <div style="text-align:center; font-size: 18px; margin: 20px 0;">
-            <p>Sizning balansingiz:</p>
-            <h1 style="color: #2ecc71;"><span id="rank-val">10.00</span> RC</h1>
-        </div>
-        <button onclick="hideModal('rank-modal')" style="width:100%; background:#e74c3c; color:white; border:none; padding:12px; border-radius:12px; font-weight:bold;">Close</button>
+    <div id="inventory-modal" class="modal">
+        <h2 style="text-align: center; color: #3498db;">Mening Sandig'im</h2>
+        <div id="inventory-items">
+            </div>
+        <button onclick="closeModal('inventory-modal')" style="width:100%; padding:12px; margin-top:10px; border-radius:15px; background:#95a5a6; color:white; border:none;">Yopish</button>
     </div>
 
-    <div id="invite-modal" class="modal">
-        <h2 style="text-align:center; color: #f1c40f;">Invite Friends</h2>
-        <p style="text-align:center; opacity: 0.8;">Har bir do'stingiz uchun <br><b>+5.00 RCoin</b> bonus oling!</p>
-        <button onclick="shareLink()" style="width:100%; background:#3498db; color:white; border:none; padding:18px; border-radius:15px; font-weight:bold; font-size: 16px;">Invite Telegram</button>
-        <button onclick="hideModal('invite-modal')" style="width:100%; margin-top:10px; background:none; border:none; color:#95a5a6;">Later</button>
-    </div>
+    <div id="rank-modal" class="modal"><h2>🏆 Reyting</h2><p>Hozircha faqat siz: <b id="rank-val">0</b> RC</p><button onclick="closeModal('rank-modal')">Yopish</button></div>
+    <div id="invite-modal" class="modal"><h2>👥 Taklif</h2><p>Do'stlar uchun bonus oling!</p><button onclick="shareLink()" style="width:100%; background:#0088cc; color:white; border:none; padding:15px; border-radius:15px;">Taklif yuborish</button><button onclick="closeModal('invite-modal')">Yopish</button></div>
 
     <script>
         const tg = window.Telegram.WebApp;
         tg.expand();
 
-        let gameData = { balance: 10.00, seeds: 5, items: [] };
-        const world = document.getElementById('nature-world');
-        let currentMode = 'seed';
-
-        // PLAY tugmasini har xil hodisalar uchun sozlash
-        const playBtn = document.getElementById('main-play-btn');
-        const startAction = () => {
-            document.getElementById('start-screen').style.display = 'none';
-            document.getElementById('game-container').style.display = 'block';
-            loadGame();
-            tg.HapticFeedback.impactOccurred('medium');
+        // O'YIN MA'LUMOTLARI
+        let gameData = JSON.parse(localStorage.getItem('rn_v5_save')) || {
+            balance: 10.00,
+            inventory: { "Oddiy Urug'": 5 },
+            planted: []
         };
-        playBtn.addEventListener('click', startAction);
-        playBtn.addEventListener('touchstart', (e) => { e.preventDefault(); startAction(); });
 
-        // Ekish mantiqi
-        world.addEventListener('click', (e) => {
-            if(e.target.id !== 'nature-world') return;
-            if (currentMode === 'seed' && gameData.seeds > 0) {
-                placeItem(e.clientX, e.clientY, 'seed');
-            } else if (currentMode === 'house') {
-                placeItem(e.clientX, e.clientY, 'house');
-                currentMode = 'seed';
-            }
-        });
+        const shopProducts = [
+            { name: "Atirgul", price: 10, icon: "🌹" },
+            { name: "Pomidor", price: 50, icon: "🍅" },
+            { name: "Qovun", price: 89, icon: "🍈" },
+            { name: "Tarvuz", price: 100, icon: "🍉" },
+            { name: "Olma darxti", price: 150, icon: "🍎" },
+            { name: "Gilos", price: 200, icon: "🍒" },
+            { name: "Subtropik Palma", price: 500, icon: "🌴" }
+        ];
 
-        function placeItem(x, y, type) {
-            if(type === 'seed') gameData.seeds--;
-            const item = { x, y, type, stage: type === 'seed' ? '🌱' : '🏠', id: Date.now() };
-            gameData.items.push(item);
-            renderItem(item);
-            saveGame();
+        let selectedItem = null;
+
+        // NAVIGATSIYA
+        function goToGame() {
+            document.getElementById('main-menu').style.display = 'none';
+            document.getElementById('game-view').style.display = 'block';
+            renderPlanted();
+        }
+
+        function goToMenu() {
+            document.getElementById('game-view').style.display = 'none';
+            document.getElementById('main-menu').style.display = 'flex';
             updateUI();
-            if(type === 'seed') setTimeout(() => { 
-                item.stage = '🌳'; 
-                const el = document.getElementById(item.id);
-                if(el) el.innerText = '🌳';
-                saveGame();
-            }, 4000);
+        }
+
+        // DO'KON VA SANDIQ LOGIKASI
+        function updateShop() {
+            const container = document.getElementById('shop-items');
+            container.innerHTML = '';
+            shopProducts.forEach(p => {
+                container.innerHTML += 
+                    <div class="item-row">
+                        <span>${p.icon} ${p.name}</span>
+                        <button class="buy-btn" onclick="buyItem('${p.name}', ${p.price})">${p.price} RC</button>
+                    </div>;
+            });
+        }
+
+        function updateInventory() {
+            const container = document.getElementById('inventory-items');
+            container.innerHTML = '';
+            for (let name in gameData.inventory) {
+                if (gameData.inventory[name] > 0) {
+                    const icon = shopProducts.find(p => p.name === name)?.icon || "🌱";
+                    container.innerHTML += 
+                        <div class="item-row">
+                            <span>${icon} ${name} (${gameData.inventory[name]} ta)</span>
+                            <button class="use-btn" onclick="selectItem('${name}')">Ekish</button>
+                        </div>;
+                }
+            }
+            if(container.innerHTML === '') container.innerHTML = '<p style="text-align:center;">Sandiq bo\'sh...</p>';
+        }
+
+        function buyItem(name, price) {
+            if (gameData.balance >= price) {
+                gameData.balance -= price;
+                gameData.inventory[name] = (gameData.inventory[name] || 0) + 1;
+                save(); updateUI(); updateShop();
+                tg.HapticFeedback.notificationOccurred('success');
+            } else {
+                tg.showAlert("Mablag' yetarli emas!");
+            }
+        }
+
+        function selectItem(name) {
+            selectedItem = name;
+            document.getElementById('current-item-name').innerText = name;
+            closeModal('inventory-modal');
             tg.HapticFeedback.impactOccurred('light');
         }
 
-        function renderItem(item) {
+        // O'YIN MAYDONI
+        document.getElementById('nature-world').addEventListener('click', (e) => {
+            if (!selectedItem || gameData.inventory[selectedItem] <= 0) return;
+
+            const icon = shopProducts.find(p => p.name === selectedItem)?.icon || "🌱";
+            const newItem = { x: e.clientX, y: e.clientY, icon: icon, id: Date.now() };
+            
+            gameData.planted.push(newItem);
+            gameData.inventory[selectedItem]--;
+            if(gameData.inventory[selectedItem] === 0) {
+                selectedItem = null;
+                document.getElementById('current-item-name').innerText = "Hech narsa";
+            }
+            
+            drawPlant(newItem);
+            save(); updateUI(); updateInventory();
+            tg.HapticFeedback.impactOccurred('medium');
+        });
+
+        function drawPlant(p) {
             const div = document.createElement('div');
-            div.className = item.type === 'seed' ? 'plant' : 'building';
-            div.id = item.id;
-            div.style.left = item.x + 'px';
-            div.style.top = item.y + 'px';
-            div.innerText = item.stage;
-            world.appendChild(div);
+            div.className = 'plant';
+            div.style.left = p.x + 'px';
+            div.style.top = p.y + 'px';
+            div.innerText = p.icon;
+            document.getElementById('nature-world').appendChild(div);
         }
 
-        function buyItem(type, price) {
-            if (gameData.balance >= price) {
-                gameData.balance -= price;
-                if (type === 'seeds') gameData.seeds += 10;
-                if (type === 'house') currentMode = 'house';
-                updateUI(); saveGame();
-                tg.HapticFeedback.notificationOccurred('success');
-            } else { tg.showAlert("RCoin yetarli emas!"); }
+        function renderPlanted() {
+            document.getElementById('nature-world').innerHTML = '';
+            gameData.planted.forEach(drawPlant);
         }
 
+        // TIZIM
+        function save() { localStorage.setItem('rn_v5_save', JSON.stringify(gameData)); }
+        
         function updateUI() {
-            document.getElementById('balance').innerText = gameData.balance.toFixed(2);
-            document.getElementById('seed-count').innerText = gameData.seeds;
+            document.getElementById('menu-balance').innerText = gameData.balance.toFixed(2);
             document.getElementById('rank-val').innerText = gameData.balance.toFixed(2);
         }
 
-        function saveGame() { localStorage.setItem('r_nature_v3', JSON.stringify(gameData)); }
-        function loadGame() {
-            const saved = localStorage.getItem('r_nature_v3');
-            if (saved) {
-                gameData = JSON.parse(saved);
-                world.innerHTML = '';
-                gameData.items.forEach(renderItem);
-                updateUI();
-            }
+        function openModal(id) { 
+            if(id === 'shop-modal') updateShop();
+            if(id === 'inventory-modal') updateInventory();
+            document.getElementById(id).style.display = 'block'; 
         }
-
-        function showModal(id) { document.getElementById(id).style.display = 'block'; tg.HapticFeedback.impactOccurred('light'); }
-        function hideModal(id) { document.getElementById(id).style.display = 'none'; }
+        function closeModal(id) { document.getElementById(id).style.display = 'none'; }
         
         function shareLink() {
-            const botUrl = "https://t.me/RPlayNatureBot"; // O'z botingiz silkasi
-            tg.openTelegramLink(https://t.me/share/url?url=${encodeURIComponent(botUrl)}&text=Dunyodagi eng zo'r tabiatni men bilan qur! 🌳💰);
+            tg.openTelegramLink("https://t.me/share/url?url=https://t.me/RPlayNatureBot&text=Tabiatni birga quramiz!");
         }
-
+        // DAROMAD (Daraxtlar pul olib keladi)
         setInterval(() => {
-            let trees = gameData.items.filter(i => i.stage === '🌳').length;
-            if(trees > 0) { gameData.balance += (trees * 0.01); updateUI(); saveGame(); }
-        }, 10000);
+            if(gameData.planted.length > 0) {
+                gameData.balance += (gameData.planted.length * 0.05);
+                updateUI(); save();
+            }
+        }, 15000);
+
+        window.onload = updateUI;
     </script>
 </body>
 </html>
