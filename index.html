@@ -3,121 +3,346 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>R-Nature World</title>
+    <title>R-Nature Game</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        :root {
-            --bg-color: #e0f2f1;
-            --grass-color: #81c784;
-            --accent: #ffb74d;
-            --glass: rgba(255, 255, 255, 0.25);
-        }
-
         body {
             margin: 0;
             padding: 0;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(180deg, #81d4fa 0%, var(--bg-color) 100%);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            height: 100vh;
             overflow: hidden;
+            background-color: #2ecc71;
+            transition: background-color 2s;
         }
 
         /* O'yin maydoni */
-        #game-grid {
-            display: grid;
-            grid-template-columns: repeat(5, 1fr);
-            gap: 10px;
-            padding: 20px;
-            background: var(--glass);
-            backdrop-filter: blur(10px);
-            border-radius: 30px;
-            border: 1px solid rgba(255,255,255,0.5);
-            margin-top: 50px;
-            box-shadow: 0 15px 35px rgba(0,0,0,0.1);
-        }
-
-        .cell {
-            width: 60px;
-            height: 60px;
-            background: rgba(255,255,255,0.3);
-            border-radius: 15px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 30px;
-            transition: transform 0.2s, background 0.3s;
-            cursor: pointer;
-        }
-
-        .cell:active {
-            transform: scale(0.9);
+        #nature-world {
+            width: 100vw;
+            height: 100vh;
+            position: relative;
         }
 
         /* Yuqori Panel */
-        .header {
-            width: 90%;
+        .top-panel {
+            position: fixed;
+            top: 10px;
+            left: 10px;
+            right: 10px;
             display: flex;
             justify-content: space-between;
-            padding: 20px;
-            margin-top: 20px;
+            z-index: 100;
         }
 
-        .stat-card {
-            background: var(--glass);
-            padding: 10px 20px;
+        .stat-box {
+            background: rgba(0,0,0,0.7);
+            color: white;
+            padding: 8px 15px;
             border-radius: 20px;
-            backdrop-filter: blur(5px);
             font-weight: bold;
-            color: #2c3e50;
-            border: 1px solid white;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        #weather-bar {
+            position: fixed;
+            top: 60px;
+            right: 10px;
+            background: rgba(0, 0, 0, 0.6);
+            padding: 8px 15px;
+            border-radius: 20px;
+            color: white;
+            font-weight: bold;
+            z-index: 100;
         }
 
         /* Pastki menyu */
-        .bottom-nav {
+        .bottom-menu {
             position: fixed;
-            bottom: 30px;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
             display: flex;
-            gap: 20px;
+            gap: 10px;
+            z-index: 100;
         }
 
-        .btn {
-            background: white;
-            padding: 15px 25px;
-            border-radius: 25px;
+        button {
+            padding: 12px 20px;
             border: none;
-            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+            border-radius: 12px;
             font-weight: bold;
-            color: #4caf50;
-            transition: all 0.3s;
+            cursor: pointer;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.2);
         }
 
-        .btn:hover {
-            background: #4caf50;
+        .btn-main { background: #f1c40f; color: #000; }
+        .btn-shop { background: #3498db; color: #fff; }
+
+        /* Modallar */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: #2c3e50;
+            border: 3px solid #f1c40f;
+            padding: 20px;
+            border-radius: 15px;
+            z-index: 500;
+            width: 80%;
+            color: white;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .shop-item {
+            background: rgba(255,255,255,0.1);
+            margin-bottom: 10px;
+            padding: 10px;
+            border-radius: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        /* Obyektlar */
+        .plant, .building {
+            position: absolute;
+            font-size: 30px;
+            user-select: none;
+            transform: translate(-50%, -50%);
+        }
+
+        #bonus-modal {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: linear-gradient(135deg, #11998e, #38ef7d);
+            padding: 25px;
+            border-radius: 20px;
+            z-index: 600;
+            text-align: center;
             color: white;
         }
     </style>
 </head>
 <body>
 
-    <div class="header">
-        <div class="stat-card">💰 1,250 RC</div>
-        <div class="stat-card">🌟 Level 5</div>
+    <div class="top-panel">
+        <div class="stat-box">💰 <span id="balance">10.00</span> RC</div>
+        <div class="stat-box">🌱 <span id="seed-count">5</span></div>
     </div>
 
-    <div id="game-grid">
-        <div class="cell">🌱</div>
-        <div class="cell">🍉</div>
-        <div class="cell"></div>
-        <div class="cell">🍅</div>
-        <div class="cell"></div>
+    <div id="weather-bar">
+        <span id="season-icon">🌸</span> <span id="season-name">Bahor</span> | <span id="temperature">22°C</span>
+    </div>
+
+    <div id="nature-world" onclick="handleWorldClick(event)"></div>
+    <div class="bottom-menu">
+        <button class="btn-main" onclick="openLeaderboard()">🏆</button>
+        <button class="btn-shop" onclick="openShop()">🛒 Do'kon</button>
+        <button class="btn-main" onclick="openInvite()">👥 Taklif</button>
+    </div>
+
+    <div id="shop-modal" class="modal">
+        <h2 style="text-align:center;">R-Nature Shop</h2>
+        <div id="shop-items-container"></div>
+        <button onclick="closeModal('shop-modal')" style="width:100%; background:#e74c3c; color:white; margin-top:10px;">Yopish</button>
+    </div>
+
+    <div id="leaderboard-modal" class="modal">
+        <h2 style="text-align:center;">🏆 Reyting</h2>
+        <div id="rank-list">
+            <div style="padding:10px; border-bottom:1px solid #444;">1. Siz: <span id="your-score">0</span> RC</div>
         </div>
-
-    <div class="bottom-nav">
-        <button class="btn">🛒 Do'kon</button>
-        <button class="btn" style="color: #fb8c00;">📦 Sandiq</button>
+        <button onclick="closeModal('leaderboard-modal')" style="width:100%; background:#e74c3c; color:white; margin-top:10px;">Yopish</button>
     </div>
 
+    <div id="invite-modal" class="modal">
+        <h2>Taklif qilish</h2>
+        <p>Har bir do'st uchun 5.00 RCoin!</p>
+        <button onclick="shareLink()" style="width:100%; background:#0088cc; color:white; padding:15px;">ULASHISH</button>
+        <button onclick="closeModal('invite-modal')" style="width:100%; margin-top:10px;">Yopish</button>
+    </div>
+
+    <div id="bonus-modal">
+        <h2>Kunlik Bonus! 🎁</h2>
+        <div style="font-size:50px;">🎁</div>
+        <p>5 ta Urug' va 1.00 RCoin</p>
+        <button onclick="claimBonus()" style="padding:10px 20px; font-weight:bold;">OLISH</button>
+    </div>
+
+    <script>
+        const tg = window.Telegram.WebApp;
+        tg.expand();
+
+        let inventory = { seeds: 5, rcoin: 10.00 };
+        let plantedPlants = [];
+        let buildings = [];
+        let currentSelection = 'seed';
+
+        const seasons = [
+            { name: "Bahor", icon: "🌸", temp: "22°C", color: "#2ecc71", mult: 2 },
+            { name: "Yoz", icon: "☀️", temp: "38°C", color: "#f1c40f", mult: 1.5 },
+            { name: "Kuz", icon: "🍂", temp: "15°C", color: "#e67e22", mult: 1 },
+            { name: "Qish", icon: "❄️", temp: "-5°C", color: "#ecf0f1", mult: 0.5 }
+        ];
+        let currentSeasonIndex = 0;
+
+        // O'yin mantiqi
+        function handleWorldClick(e) {
+            if (currentSelection === 'seed' && inventory.seeds > 0) {
+                placePlant(e.clientX, e.clientY);
+            } else if (currentSelection === 'house') {
+                placeBuilding(e.clientX, e.clientY, 'house');
+                currentSelection = 'seed';
+            }
+        }
+
+        function placePlant(x, y) {
+            inventory.seeds--;
+            const plantObj = { x, y, stage: 'seed', id: Date.now() };
+            plantedPlants.push(plantObj);
+            updateUI();
+            drawPlant(plantObj);
+            
+            setTimeout(() => growPlant(plantObj.id), 5000);
+        }
+
+        function drawPlant(p) {
+            const el = document.createElement('div');
+            el.className = 'plant';
+            el.id = 'p-' + p.id;
+            el.style.left = p.x + 'px';
+            el.style.top = p.y + 'px';
+            el.innerText = '🌱';
+            document.getElementById('nature-world').appendChild(el);
+        }
+
+        function growPlant(id) {
+            const p = plantedPlants.find(x => x.id === id);
+            if (p) {
+                p.stage = 'tree';
+                const el = document.getElementById('p-' + id);
+                if (el) el.innerText = '🌳';
+            }
+        }
+
+        function placeBuilding(x, y, type) {
+            const b = document.createElement('div');
+            b.className = 'building';
+            b.style.left = x + 'px';
+            b.style.top = y + 'px';
+            b.innerText = type === 'house' ? '🏠' : '🏭';
+            document.getElementById('nature-world').appendChild(b);
+            buildings.push({x, y, type});
+        }
+        // Daromad va Fasllar
+        setInterval(() => {
+            let income = 0;
+            plantedPlants.forEach(p => {
+                if (p.stage === 'tree') income += 0.05 * seasons[currentSeasonIndex].mult;
+            });
+            inventory.rcoin += income;
+            updateUI();
+        }, 10000);
+
+        function updateWeather() {
+            let s = seasons[currentSeasonIndex];
+            document.getElementById('season-name').innerText = s.name;
+            document.getElementById('season-icon').innerText = s.icon;
+            document.getElementById('temperature').innerText = s.temp;
+            document.getElementById('nature-world').style.backgroundColor = s.color;
+            currentSeasonIndex = (currentSeasonIndex + 1) % seasons.length;
+        }
+        setInterval(updateWeather, 60000); // 1 minutda fasl almashadi
+
+        // Do'kon
+        const shopItems = [
+            { id: 'seed_pack', name: '10x Urug\'', price: 1.00, icon: '🌸' },
+            { id: 'house', name: 'Uy', price: 5.00, icon: '🏠' }
+        ];
+
+        function openShop() {
+            const container = document.getElementById('shop-items-container');
+            container.innerHTML = '';
+            shopItems.forEach(item => {
+                container.innerHTML += 
+                    <div class="shop-item">
+                        <span>${item.icon} ${item.name} - ${item.price} RC</span>
+                        <button onclick="buyItem('${item.id}', ${item.price})" style="background:#2ecc71; color:white;">Olish</button>
+                    </div>;
+            });
+            document.getElementById('shop-modal').style.display = 'block';
+        }
+
+        function buyItem(id, price) {
+            if (inventory.rcoin >= price) {
+                inventory.rcoin -= price;
+                if (id === 'seed_pack') inventory.seeds += 10;
+                if (id === 'house') currentSelection = 'house';
+                updateUI();
+                tg.showAlert("Sotib olindi!");
+            } else {
+                tg.showAlert("Pul yetarli emas!");
+            }
+        }
+
+        // Tizim funksiyalari
+        function updateUI() {
+            document.getElementById('balance').innerText = inventory.rcoin.toFixed(2);
+            document.getElementById('seed-count').innerText = inventory.seeds;
+            document.getElementById('your-score').innerText = inventory.rcoin.toFixed(2);
+        }
+
+        function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+        function openLeaderboard() { document.getElementById('leaderboard-modal').style.display = 'block'; }
+        function openInvite() { document.getElementById('invite-modal').style.display = 'block'; }
+
+        function shareLink() {
+            const url = "https://t.me/SIZNING_BOTINGIZ?start=ref123";
+            tg.openTelegramLink(https://t.me/share/url?url=${encodeURIComponent(url)}&text=Menga qo'shil!);
+        }
+
+        function saveGame() {
+            const data = { inventory, plantedPlants, buildings, lastBonus: localStorage.getItem('last_bonus') };
+            localStorage.setItem('r_nature_data', JSON.stringify(data));
+        }
+
+        function loadGame() {
+            const saved = localStorage.getItem('r_nature_data');
+            if (saved) {
+                const data = JSON.parse(saved);
+                inventory = data.inventory;
+                updateUI();
+            }
+            checkBonus();
+        }
+
+        function checkBonus() {
+            const last = localStorage.getItem('last_bonus');
+            if (!last || (Date.now() - last) > 86400000) {
+                document.getElementById('bonus-modal').style.display = 'block';
+            }
+        }
+
+        function claimBonus() {
+            inventory.seeds += 5;
+            inventory.rcoin += 1.0;
+            localStorage.setItem('last_bonus', Date.now());
+            document.getElementById('bonus-modal').style.display = 'none';
+            updateUI();
+            saveGame();
+        }
+        window.onload = () => {
+            loadGame();
+            updateWeather();
+        };
+        setInterval(saveGame, 5000);
+    </script>
 </body>
 </html>
