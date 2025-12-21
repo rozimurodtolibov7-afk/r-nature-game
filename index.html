@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>R-Nature: 10 Languages Edition</title>
+    <title>R-Nature: Official Edition</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
@@ -17,85 +17,82 @@
             background-size: cover; background-position: center; 
         }
 
-        /* TILLAR EKRANI */
-        #lang-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #fff; z-index: 3000; display: flex; flex-direction: column; align-items: center; padding: 20px; overflow-y: auto; }
-        .lang-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; width: 100%; margin-top: 20px; }
-        
-        #menu-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.3); display: none; flex-direction: column; align-items: center; justify-content: space-between; padding: 40px 20px; z-index: 1000; }
+        #lang-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: white; z-index: 3000; display: flex; flex-direction: column; align-items: center; padding: 20px; overflow-y: auto; }
+        #menu-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.1); display: none; flex-direction: column; align-items: center; justify-content: space-between; padding: 50px 20px; z-index: 1000; }
         #game-screen { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; }
 
-        .title { color: white; font-size: 40px; font-weight: 900; text-shadow: 3px 3px 0px #27ae60; text-align: center; }
+        .title { color: white; font-size: 40px; font-weight: 900; text-shadow: 4px 4px 0px #27ae60; text-align: center; }
         
-        /* RC COIN STYLE */
         .pill { 
-            background: rgba(255,255,255,0.9); padding: 5px 12px; border-radius: 25px; 
-            font-weight: bold; border: 2px solid #f1c40f; display: flex; align-items: center; gap: 8px; 
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            background: white; padding: 5px 15px; border-radius: 30px; 
+            font-weight: bold; border: 3px solid #f1c40f; display: flex; align-items: center; gap: 8px; 
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
         }
-        .rc-icon { width: 24px; height: 24px; }
+        .rc-icon { width: 28px; height: 28px; object-fit: contain; }
 
-        .play-btn { width: 110px; height: 110px; background: #f1c40f; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: bold; border: 5px solid white; box-shadow: 0 6px 0px #d4ac0d; }
+        .play-btn { width: 120px; height: 120px; background: #f1c40f; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 22px; font-weight: bold; border: 6px solid white; box-shadow: 0 8px 0px #d4ac0d; cursor: pointer; }
         
         .menu-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; width: 100%; }
-        .grid-btn { background: #3498db; border: 2px solid white; color: white; padding: 10px 5px; border-radius: 12px; text-align: center; font-weight: bold; font-size: 12px; }
+        .grid-btn { background: #3498db; border: 3px solid white; color: white; padding: 15px 5px; border-radius: 15px; text-align: center; font-weight: bold; font-size: 13px; box-shadow: 0 4px 0px #2980b9; }
 
         #modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 2000; align-items: center; justify-content: center; backdrop-filter: blur(5px); }
-        .modal-box { background: white; width: 90%; border-radius: 20px; padding: 20px; max-height: 70vh; overflow-y: auto; border: 4px solid #3498db; }
-        .shop-row { display: flex; justify-content: space-between; align-items: center; padding: 10px; border-bottom: 1px dashed #ddd; }
-        .buy-btn { background: #2ecc71; color: white; border: none; padding: 6px 12px; border-radius: 8px; font-weight: bold; }
+        .modal-box { background: white; width: 92%; border-radius: 25px; padding: 20px; max-height: 75vh; overflow-y: auto; border: 5px solid #3498db; }
+        .shop-row { display: flex; justify-content: space-between; align-items: center; padding: 12px; border-bottom: 2px dashed #eee; }
+        .buy-btn { background: #2ecc71; color: white; border: none; padding: 10px 15px; border-radius: 10px; font-weight: bold; cursor: pointer; }
         
-        .plant { position: absolute; font-size: 40px; transform: translate(-50%, -50%); pointer-events: none; }
-        .lang-item { background: #f1c40f; color: white; padding: 12px; border-radius: 10px; text-align: center; font-weight: bold; border: 2px solid #fff; box-shadow: 0 3px 0 #d4ac0d; }
+        .plant { position: absolute; font-size: 45px; transform: translate(-50%, -50%); pointer-events: none; transition: 0.5s; }
+        .lang-card { background: #f1c40f; color: white; padding: 15px; border-radius: 15px; text-align: center; font-weight: bold; border: 3px solid #fff; margin-bottom: 10px; width: 100%; }
     </style>
 </head>
 <body>
 
     <div id="lang-screen">
-        <h2 style="margin-top:20px;">Choose Language</h2>
-        <div class="lang-grid" id="lang-list"></div>
+        <h1 style="margin: 20px 0;">Select Language</h1>
+        <div id="lang-options" style="width: 100%;"></div>
     </div>
 
     <div id="menu-screen">
         <div class="title">R-NATURE</div>
-        <div style="display:flex; gap:10px;">
+        <div style="display:flex; gap:15px;">
             <div class="pill">
-                <img src="https://i.ibb.co/VWVmD4H/1000003914.png" class="rc-icon"> <span id="m-bal">0.00</span>
+                <img src="https://i.ibb.co/VWVmD4H/1000003914.png" class="rc-icon">
+                <span id="m-bal">0.00</span>
             </div>
-            <div class="pill" style="border-color:#3498db">⭐ Lvl <span id="m-lvl">1</span></div>
+            <div class="pill" style="border-color:#3498db">⭐ <span id="m-lvl">1</span></div>
         </div>
-        <div class="play-btn" id="btn-play">PLAY</div>
+        <div class="play-btn" id="start-game">PLAY</div>
         <div class="menu-grid">
-            <div class="grid-btn" onclick="openShop()" id="txt-shop">🛒 Shop</div>
-            <div class="grid-btn" onclick="openRank()" id="txt-rank">🏆 Rank</div>
-            <div class="grid-btn" onclick="invite()" id="txt-invite">👥 Invite</div>
+            <div class="grid-btn" onclick="openShop()" id="btn-shop">🛒 Shop</div>
+            <div class="grid-btn" onclick="openRank()" id="btn-rank">🏆 Rank</div>
+            <div class="grid-btn" onclick="invite()" id="btn-invite">👥 Invite</div>
         </div>
     </div>
 
     <div id="game-screen">
-        <div style="position:absolute; top:15px; left:15px; z-index:10; display:flex; gap:10px;">
-            <div class="pill" onclick="goBack()">🏠</div>
+        <div style="position:absolute; top:20px; left:20px; z-index:10; display:flex; gap:10px;">
+            <div class="pill" style="padding: 10px;" onclick="backToMenu()">🏠</div>
             <div class="pill">
                 <img src="https://i.ibb.co/VWVmD4H/1000003914.png" class="rc-icon">
                 <span id="g-bal">0.00</span>
             </div>
         </div>
         <div id="nature-world"></div>
-        <div style="position:absolute; bottom:30px; right:20px; display:flex; flex-direction:column; gap:15px; z-index:10;">
-            <button class="play-btn" style="width:60px; height:60px; font-size:25px;" onclick="openInv()">🎒</button>
-            <button class="play-btn" style="width:60px; height:60px; font-size:25px; background:#f1c40f;" onclick="openShop()">🛒</button>
+        <div style="position:absolute; bottom:40px; right:20px; display:flex; flex-direction:column; gap:15px; z-index:10;">
+            <button class="play-btn" style="width:65px; height:65px; font-size:28px;" onclick="openInventory()">🎒</button>
+            <button class="play-btn" style="width:65px; height:65px; font-size:28px; background:#f1c40f;" onclick="openShop()">🛒</button>
         </div>
     </div>
 
     <div id="modal-overlay">
         <div class="modal-box">
-            <h2 id="modal-title" style="text-align:center; margin-bottom:15px;"></h2>
-            <div id="modal-list"></div>
-            <button onclick="closeModal()" id="txt-close" style="width:100%; margin-top:15px; padding:12px; background:#e74c3c; color:white; border:none; border-radius:12px; font-weight:bold;">Close</button>
+            <h2 id="modal-title" style="text-align:center; margin-bottom:15px; color:#2980b9;"></h2>
+            <div id="modal-body"></div>
+            <button onclick="closeModal()" id="btn-close" style="width:100%; margin-top:20px; padding:15px; background:#e74c3c; color:white; border:none; border-radius:15px; font-weight:bold;">Close</button>
         </div>
     </div>
 
     <script>
-        // FIREBASE
+        // CONFIG
         const firebaseConfig = {
             apiKey: "AIzaSyBK57eb0Wr_x2x-PFC-a5PAzqBzdKMeic",
             authDomain: "r-nature.firebaseapp.com",
@@ -108,168 +105,177 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
         const tg = window.Telegram.WebApp;
-        const uid = tg.initDataUnsafe.user ? tg.initDataUnsafe.user.id : "test_888";
+        tg.expand();
+        const userRef = db.ref('users/' + (tg.initDataUnsafe.user ? tg.initDataUnsafe.user.id : "local_user"));
 
-        let user = { bal: 20.0, xp: 0, lvl: 1, inv: {"Flower": 1}, planted: [], lang: null, name: tg.initDataUnsafe.user?.first_name || "Gamer" };
-        let selected = null;
+        let game = { bal: 30.0, lvl: 1, xp: 0, lang: null, inv: {"Rose": 1}, planted: [], name: tg.initDataUnsafe.user?.first_name || "User" };
+        let selectedSeed = null;
 
-        // 10 TA TIL LUG'ATI
-        const langs = {
-            uz: {shop:"Do'kon", rank:"Reyting", invite:"Taklif", buy:"Sotib olish", sow:"Ekish", close:"Yopish", rank_t:"Top Bog'bonlar", empty:"Sandiq bo'sh"},
-            en: {shop:"Shop", rank:"Rank", invite:"Invite", buy:"Buy", sow:"Sow", close:"Close", rank_t:"Top Gardeners", empty:"Inventory empty"},
-            ru: {shop:"Магазин", rank:"Рейтинг", invite:"Друзья", buy:"Купить", sow:"Посеять", close:"Закрыть", rank_t:"Топ Садоводов", empty:"Сумка пуста"},
-            tr: {shop:"Mağaza", rank:"Sıralama", invite:"Davet et", buy:"Satın al", sow:"Ek", close:"Kapat", rank_t:"En İyi Bahçıvanlar", empty:"Envanter boş"},
-            tj: {shop:"Дӯкон", rank:"Рейтинг", invite:"Даъват", buy:"Харидан", sow:"Коштан", close:"Пӯшидан", rank_t:"Беҳтаринҳо", empty:"Халта холӣ аст"},
-            de: {shop:"Laden", rank:"Rang", invite:"Einladen", buy:"Kaufen", sow:"Säen", close:"Schließen", rank_t:"Top Gärtner", empty:"Inventar leer"},
-            fr: {shop:"Boutique", rank:"Rang", invite:"Inviter", buy:"Acheter", sow:"Semer", close:"Fermer", rank_t:"Top Jardiniers", empty:"Inventaire vide"},
-            es: {shop:"Tienda", rank:"Rango", invite:"Invitar", buy:"Comprar", sow:"Sembrar", close:"Cerrar", rank_t:"Top Jardineros", empty:"Inventario vacío"},
-            pt: {shop:"Loja", rank:"Ranking", invite:"Convidar", buy:"Comprar", sow:"Semear", close:"Fechar", rank_t:"Top Jardineiros", empty:"Inventário vazio"},
-            it: {shop:"Negozio", rank:"Classifica", invite:"Invita", buy:"Comprare", sow:"Seminare", close:"Chiudi", rank_t:"Top Giardinieri", empty:"Inventario vuoto"}
+        const langDict = {
+            uz: {shop:"Do'kon", rank:"Reyting", invite:"Taklif", buy:"Sotib olish", sow:"Ekish", close:"Yopish", top:"Reyting", empty:"Sandiq bo'sh"},
+            en: {shop:"Shop", rank:"Rank", invite:"Invite", buy:"Buy", sow:"Sow", close:"Close", top:"Top Gardeners", empty:"Empty"},
+            ru: {shop:"Магазиn", rank:"Рейтинг", invite:"Друзья", buy:"Купить", sow:"Посеять", close:"Закрыть", top:"Топ 10", empty:"Пусто"},
+            tr: {shop:"Mağaza", rank:"Sıralama", invite:"Davet", buy:"Satın al", sow:"Ek", close:"Kapat", top:"Sıralama", empty:"Boş"},
+            tj: {shop:"Дӯкон", rank:"Рейтинг", invite:"Даъват", buy:"Харидан", sow:"Коштан", close:"Пӯшидан", top:"Беҳтаринҳо", empty:"Холӣ"},
+            de: {shop:"Laden", rank:"Rang", invite:"Einladen", buy:"Kaufen", sow:"Säen", close:"Schließen", top:"Besten", empty:"Leer"},
+            fr: {shop:"Boutique", rank:"Rang", invite:"Inviter", buy:"Acheter", sow:"Semer", close:"Fermer", top:"Classement", empty:"Vide"},
+            es: {shop:"Tienda", rank:"Rango", invite:"Invitar", buy:"Comprar", sow:"Sembrar", close:"Cerrar", top:"Rango", empty:"Vacío"},
+            pt: {shop:"Loja", rank:"Ranking", invite:"Convidar", buy:"Comprar", sow:"Semear", close:"Fechar", top:"Ranking", empty:"Vazio"},
+            it: {shop:"Negozio", rank:"Classifica", invite:"Invita", buy:"Comprare", sow:"Seminare", close:"Chiudi", top:"Top 10", empty:"Vuoto"}
         };
 
-        const flags = {uz:"🇺🇿 O'zbek", en:"🇺🇸 English", ru:"🇷🇺 Русский", tr:"🇹🇷 Türkçe", tj:"🇹🇯 Тоҷикӣ", de:"🇩🇪 Deutsch", fr:"🇫🇷 Français", es:"🇪🇸 Español", pt:"<pt> Português", it:"🇮🇹 Italiano"};
+        const flagList = {uz:"🇺🇿 O'zbek", en:"🇺🇸 English", ru:"🇷🇺 Русский", tr:"🇹🇷 Türkçe", tj:"🇹🇯 Тоҷикӣ", de:"🇩🇪 Deutsch", fr:"🇫🇷 Français", es:"🇪🇸 Español", pt:"🇵🇹 Português", it:"🇮🇹 Italiano"};
 
-        const shopItems = [
-            { id: "Flower", n: {uz:"Atirgul", en:"Rose", ru:"Роза", tr:"Gül", tj:"Гули садбарг", de:"Rose", fr:"Rose", es:"Rosa", pt:"Rosa", it:"Rosa"}, p: 10, i: "🌹", inc: 0.2 },
-            { id: "Strawberry", n: {uz:"Qulupnay", en:"Strawberry", ru:"Клубника", tr:"Çilek", tj:"Клубника", de:"Erdbeere", fr:"Fraise", es:"Fresa", pt:"Morango", it:"Fragola"}, p: 50, i: "🍓", inc: 1.0 },
-            { id: "Robot", n: {uz:"Robot", en:"Robot", ru:"Робот", tr:"Robot", tj:"Робот", de:"Roboter", fr:"Robot", es:"Robot", pt:"Robô", it:"Robot"}, p: 500, i: "🤖", inc: 3.0 }
+        const shopData = [
+            { id: "Rose", n: {uz:"Atirgul", en:"Rose", ru:"Роза", tr:"Gül", tj:"Гули садбарг", de:"Rose", fr:"Rose", es:"Rosa", pt:"Rosa", it:"Rosa"}, p: 20, i: "🌹", inc: 0.5 },
+            { id: "Strawberry", n: {uz:"Qulupnay", en:"Strawberry", ru:"Клубника", tr:"Çilek", tj:"Клубника", de:"Erdbeere", fr:"Fraise", es:"Fresa", pt:"Morango", it:"Fragola"}, p: 80, i: "🍓", inc: 2.0 },
+            { id: "Tree", n: {uz:"Daraxt", en:"Tree", ru:"Дерево", tr:"Ağaç", tj:"Дарахт", de:"Baum", fr:"Arbre", es:"Árbol", pt:"Árvore", it:"Albero"}, p: 300, i: "🌳", inc: 6.0 },
+            { id: "Robot", n: {uz:"Robot", en:"Robot", ru:"Робот", tr:"Robot", tj:"Робот", de:"Robot", fr:"Robot", es:"Robot", pt:"Robô", it:"Robot"}, p: 2000, i: "🤖", inc: 15.0 }
         ];
 
-        function setLang(c) { user.lang = c; save(); start(); }
+        function setLang(c) { game.lang = c; save(); startMenu(); }
 
-        function start() {
+        function startMenu() {
             document.getElementById('lang-screen').style.display = 'none';
             document.getElementById('menu-screen').style.display = 'flex';
-            const l = langs[user.lang];
-            document.getElementById('txt-shop').innerText = "🛒 " + l.shop;
-            document.getElementById('txt-rank').innerText = "🏆 " + l.rank;
-            document.getElementById('txt-invite').innerText = "👥 " + l.invite;
-            document.getElementById('txt-close').innerText = l.close;
+            const l = langDict[game.lang];
+            document.getElementById('btn-shop').innerText = "🛒 " + l.shop;
+            document.getElementById('btn-rank').innerText = "🏆 " + l.rank;
+            document.getElementById('btn-invite').innerText = "👥 " + l.invite;
+            document.getElementById('btn-close').innerText = l.close;
             updateUI();
         }
 
         function updateUI() {
-            document.getElementById('m-bal').innerText = user.bal.toFixed(2);
-            document.getElementById('g-bal').innerText = user.bal.toFixed(2);
-            document.getElementById('m-lvl').innerText = user.lvl;
+            document.getElementById('m-bal').innerText = game.bal.toFixed(2);
+            document.getElementById('g-bal').innerText = game.bal.toFixed(2);
+            document.getElementById('m-lvl').innerText = game.lvl;
         }
 
-        // DO'KONNI KO'RSATISH
         function openShop() {
-            const l = langs[user.lang];
+            const l = langDict[game.lang];
             document.getElementById('modal-title').innerText = l.shop;
-            let html = "";
-            shopItems.forEach(item => {
-                html += `<div class="shop-row">
-                    <span>${item.i} ${item.n[user.lang]} (${item.p} RC)</span>
-                    <button class="buy-btn" onclick="buy('${item.id}')">${l.buy}</button>
+            let h = "";
+            shopData.forEach(it => {
+                h += `<div class="shop-row">
+                    <span>${it.i} ${it.n[game.lang]} <br><small>${it.p} RC</small></span>
+                    <button class="buy-btn" onclick="buyItem('${it.id}')">${l.buy}</button>
                 </div>`;
             });
-            document.getElementById('modal-list').innerHTML = html;
+            document.getElementById('modal-body').innerHTML = h;
             document.getElementById('modal-overlay').style.display = 'flex';
         }
 
-        window.buy = (id) => {
-            const it = shopItems.find(i => i.id === id);
-            if(user.bal >= it.p) {
-                user.bal -= it.p;
-                user.inv[id] = (user.inv[id] || 0) + 1;
+        window.buyItem = (id) => {
+            const it = shopData.find(x => x.id === id);
+            if(game.bal >= it.p) {
+                game.bal -= it.p;
+                game.inv[id] = (game.inv[id] || 0) + 1;
                 updateUI(); save();
-            } else { tg.showAlert("No RC!"); }
+            } else { tg.showAlert("RC yetarli emas!"); }
         };
 
-        function openInv() {
-            const l = langs[user.lang];
+        function openInventory() {
+            const l = langDict[game.lang];
             document.getElementById('modal-title').innerText = l.shop;
-            let html = "";
-            for(let id in user.inv) {
-                if(user.inv[id] > 0 && id !== "Robot") {
-                    const it = shopItems.find(i => i.id === id);
-                    html += `<div class="shop-row">
-                        <span>${it.i} ${it.n[user.lang]} (${user.inv[id]})</span>
-                        <button class="buy-btn" style="background:#3498db" onclick="selectItem('${id}')">${l.sow}</button>
+            let h = "";
+            for(let key in game.inv) {
+                if(game.inv[key] > 0 && key !== "Robot") {
+                    const it = shopData.find(x => x.id === key);
+                    h += `<div class="shop-row">
+                        <span>${it.i} ${it.n[game.lang]} (${game.inv[key]})</span>
+                        <button class="buy-btn" style="background:#3498db" onclick="selectSeed('${key}')">${l.sow}</button>
                     </div>`;
                 }
             }
-            document.getElementById('modal-list').innerHTML = html || l.empty;
+            document.getElementById('modal-body').innerHTML = h || l.empty;
             document.getElementById('modal-overlay').style.display = 'flex';
         }
 
-        window.selectItem = (id) => { selected = id; closeModal(); };
+        window.selectSeed = (id) => { selectedSeed = id; closeModal(); };
 
         document.getElementById('nature-world').onclick = (e) => {
-            if(!selected || !user.inv[selected]) return;
-            const it = shopItems.find(i => i.id === selected);
-            const p = { x: e.clientX, y: e.clientY, i: it.i, id: it.id, born: Date.now() };
-            user.planted.push(p);
-            user.inv[selected]--;
-            user.xp += 10;
-            if(user.xp >= user.lvl * 100) { user.lvl++; user.bal += 50; }
-            draw(p); updateUI(); save();
+            if(!selectedSeed || !game.inv[selectedSeed]) return;
+            const it = shopData.find(x => x.id === selectedSeed);
+            const p = { x: e.clientX, y: e.clientY, i: it.i, id: it.id, t: Date.now() };
+            game.planted.push(p);
+            game.inv[selectedSeed]--;
+            game.xp += 10;
+            if(game.xp >= game.lvl * 100) { game.lvl++; game.bal += 50; }
+            renderPlant(p); updateUI(); save();
         };
 
-        function draw(p) {
-            const el = document.createElement('div'); el.className = 'plant'; el.id = 'p-' + p.born;
-            el.style.left = p.x + 'px'; el.style.top = p.y + 'px';
-            const age = (Date.now() - p.born)/1000;
-            el.innerText = age < 10 ? "🫘" : (age < 20 ? "🌱" : p.i);
-            document.getElementById('nature-world').appendChild(el);
+        function renderPlant(p) {
+            const div = document.createElement('div'); div.className = 'plant'; div.id = 'plt-'+p.t;
+            div.style.left = p.x + 'px'; div.style.top = p.y + 'px';
+            const age = (Date.now() - p.t)/1000;
+            div.innerText = age < 10 ? "🫘" : (age < 20 ? "🌱" : p.i);
+            document.getElementById('nature-world').appendChild(div);
+        }
+
+        function invite() {
+            const url = "https://t.me/RPlay_game_bot";
+            const txt = "Men bilan o'ynang va RC tangalarini to'plang! 🌿";
+            tg.openTelegramLink(`https://t.me/share/url?url=${encodeURIComponent(url)}&text=${encodeURIComponent(txt)}`);
         }
 
         function openRank() {
             db.ref('users').orderByChild('bal').limitToLast(10).once('value').then(snap => {
-                let players = [];
-                snap.forEach(c => players.push(c.val()));
-                players.reverse();
-                document.getElementById('modal-title').innerText = langs[user.lang].rank_t;
-                document.getElementById('modal-list').innerHTML = players.map((p,i) => 
-                    `<div class="shop-row"><span>${i+1}. ${p.name || 'User'}</span><span>${p.bal.toFixed(0)} RC</span></div>`
+                let res = []; snap.forEach(c => res.push(c.val()));
+                res.sort((a,b) => b.bal - a.bal);
+                document.getElementById('modal-title').innerText = langDict[game.lang].top;
+                document.getElementById('modal-body').innerHTML = res.map((u,i) => 
+                    `<div class="shop-row"><b>${i+1}. ${u.name}</b> <span>${u.bal.toFixed(0)} RC</span></div>`
                 ).join('');
                 document.getElementById('modal-overlay').style.display = 'flex';
             });
         }
 
-        function invite() { tg.openTelegramLink(`https://t.me/share/url?url=https://t.me/RPlayNatureBot&text=Play with me!`); }
+        function save() { userRef.set(game); }
         function closeModal() { document.getElementById('modal-overlay').style.display = 'none'; }
-        function goBack() { document.getElementById('game-screen').style.display = 'none'; document.getElementById('menu-screen').style.display = 'flex'; }
-        document.getElementById('btn-play').onclick = () => { document.getElementById('menu-screen').style.display = 'none'; document.getElementById('game-screen').style.display = 'block'; render(); };
+        function backToMenu() { document.getElementById('game-screen').style.display = 'none'; document.getElementById('menu-screen').style.display = 'flex'; }
+        document.getElementById('start-game').onclick = () => { document.getElementById('menu-screen').style.display = 'none'; document.getElementById('game-screen').style.display = 'block'; refreshWorld(); };
 
-        function render() {
+        function refreshWorld() {
             document.getElementById('nature-world').innerHTML = '';
-            if(user.planted) user.planted.forEach(draw);
+            if(game.planted) game.planted.forEach(renderPlant);
         }
 
-        function save() { db.ref('users/' + uid).set(user); }
-
-        function load() {
-            // Til tanlash ro'yxatini chiqarish
-            const ldiv = document.getElementById('lang-list');
-            for(let key in flags) {
-                const b = document.createElement('div'); b.className = 'lang-item';
-                b.innerText = flags[key]; b.onclick = () => setLang(key);
-                ldiv.appendChild(b);
+        function init() {
+            const box = document.getElementById('lang-options');
+            for(let k in flagList) {
+                const d = document.createElement('div'); d.className = 'lang-card';
+                d.innerText = flagList[k]; d.onclick = () => setLang(k);
+                box.appendChild(d);
             }
-
-            db.ref('users/' + uid).once('value').then(snap => {
+            userRef.once('value').then(snap => {
                 if(snap.exists()) {
-                    user = snap.val();
-                    if(!user.planted) user.planted = [];
-                    if(!user.inv) user.inv = {};
-                    if(user.lang) start();
+                    game = snap.val();
+                    if(!game.planted) game.planted = [];
+                    if(!game.inv) game.inv = {};
+                    if(game.lang) startMenu();
                 }
             });
         }
 
         setInterval(() => {
-            let inc = 0;
-            if(user.planted) {
-                user.planted.forEach(p => { if((Date.now()-p.born)/1000 > 20) inc += shopItems.find(i=>i.id===p.id).inc; });
+            let add = 0;
+            if(game.planted) {
+                game.planted.forEach(p => {
+                    const sec = (Date.now()-p.t)/1000;
+                    if(sec > 20) add += shopData.find(x=>x.id===p.id).inc;
+                    const el = document.getElementById('plt-'+p.t);
+                    if(el) {
+                        if(sec >= 10 && sec < 11) el.innerText = "🌱";
+                        if(sec >= 20 && sec < 21) el.innerText = shopData.find(x=>x.id===p.id).i;
+                    }
+                });
             }
-            if(user.inv["Robot"]) inc += 3.0;
-            if(inc > 0) { user.bal += inc; updateUI(); save(); }
+            if(game.inv["Robot"]) add += 15.0;
+            if(add > 0) { game.bal += add; updateUI(); save(); }
         }, 10000);
 
-        load();
+        init();
     </script>
 </body>
 </html>
