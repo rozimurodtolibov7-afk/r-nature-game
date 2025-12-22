@@ -3,339 +3,288 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>R-Nature: Infinite Titan</title>
+    <title>R-Nature: Infinite Titan Edition</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
     
     <style>
-        /* MASSIVE CSS SYSTEM
-           Bu yerda o'yinning vizual qismi uchun 2000 qatorlik mantiq sun'iy ravishda emas,
-           balki murakkab selektorlar orqali kengaytirilgan.
-        */
         :root {
             --p-green: #2ecc71; --d-green: #27ae60; --sky: #87ceeb;
-            --mars: #e67e22; --moon: #bdc3c7; --gold: #f1c40f;
-            --trans: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            --gold: #f1c40f; --clay: #795548; --shadow: rgba(0,0,0,0.2);
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-        body, html { width: 100%; height: 100%; overflow: hidden; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--sky); }
+        body, html { width: 100%; height: 100%; overflow: hidden; font-family: 'Segoe UI', sans-serif; background: var(--sky); }
 
-        /* SCENE STYLING */
-        .world { position: relative; width: 100vw; height: 100vh; perspective: 1000px; }
-        .ground { position: absolute; bottom: 0; width: 100%; height: 70%; background: linear-gradient(to bottom, #7cfc00, #2ecc71); border-top: 15px solid #1e8449; z-index: 1; }
+        /* SCENE ELEMENTS */
+        .world { position: relative; width: 100vw; height: 100vh; overflow: hidden; }
+        .sun { position: absolute; top: 30px; right: 30px; font-size: 80px; filter: drop-shadow(0 0 20px #fff); animation: floatSun 4s infinite ease-in-out; z-index: 1; }
+        @keyframes floatSun { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
         
-        .sun { position: absolute; top: 30px; right: 30px; font-size: 80px; filter: drop-shadow(0 0 30px yellow); animation: pulse 4s infinite; z-index: 0; }
-        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.1); } 100% { transform: scale(1); } }
+        .meadow { position: absolute; bottom: 0; width: 100%; height: 75%; background: linear-gradient(180deg, #7cfc00 0%, #2ecc71 100%); border-top: 12px solid #1e8449; z-index: 2; }
+        
+        /* SCREENS */
+        .screen { position: fixed; inset: 0; display: none; flex-direction: column; align-items: center; justify-content: center; z-index: 1000; background: var(--sky); }
+        .active { display: flex; }
+        #menu-screen { background: url('https://img.freepik.com/free-vector/spring-landscape-scene_23-2148852379.jpg') center/cover; }
 
-        /* UI SCREENS */
-        .screen { position: fixed; inset: 0; display: none; flex-direction: column; align-items: center; justify-content: center; z-index: 1000; transition: var(--trans); }
-        .active-screen { display: flex; }
-        #menu-screen { background: url('https://img.freepik.com/free-vector/green-meadow-landscape_23-2148852379.jpg') center/cover; }
-
-        /* BUTTONS */
-        .btn-mega {
-            background: white; border: 5px solid var(--d-green); padding: 20px 50px; border-radius: 50px;
-            font-size: 24px; font-weight: 900; color: var(--d-green); cursor: pointer;
-            box-shadow: 0 10px 0 var(--d-green); margin: 15px; transition: 0.1s;
+        /* UI BUTTONS */
+        .btn {
+            background: white; border: 4px solid var(--d-green); padding: 15px 35px; border-radius: 50px;
+            font-size: 20px; font-weight: 900; color: var(--d-green); cursor: pointer;
+            box-shadow: 0 8px 0 var(--d-green); margin: 10px; transition: 0.1s;
         }
-        .btn-mega:active { transform: translateY(5px); box-shadow: 0 5px 0 var(--d-green); }
-        .play-btn { width: 180px; height: 180px; border-radius: 50%; background: var(--gold); border: 10px solid white; font-size: 40px; color: white; display: flex; align-items: center; justify-content: center; }
+        .btn:active { transform: translateY(4px); box-shadow: 0 4px 0 var(--d-green); }
+        .play-btn { width: 150px; height: 150px; border-radius: 50%; background: var(--gold); border: 8px solid white; font-size: 35px; color: white; display: flex; align-items: center; justify-content: center; animation: pulse 2s infinite; }
+        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
 
-        /* HUD PANEL */
-        .hud { position: absolute; top: 15px; width: 95%; display: flex; justify-content: space-between; z-index: 2000; }
-        .stat-card { background: rgba(255,255,255,0.9); padding: 10px 20px; border-radius: 20px; border: 3px solid var(--d-green); font-weight: bold; font-size: 18px; display: flex; align-items: center; gap: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        /* HUD */
+        .hud { position: absolute; top: 15px; width: 95%; display: flex; justify-content: space-between; z-index: 2000; padding: 0 10px; }
+        .stat-box { background: rgba(255,255,255,0.9); padding: 8px 15px; border-radius: 20px; border: 3px solid var(--d-green); font-weight: bold; font-size: 16px; display: flex; align-items: center; gap: 8px; box-shadow: 0 4px 0 var(--d-green); }
 
-        /* SHOP MODAL */
-        .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 3000; align-items: center; justify-content: center; }
-        .modal-inner { width: 95%; height: 85%; background: #fff; border-radius: 40px; overflow: hidden; display: flex; flex-direction: column; border: 8px solid var(--d-green); }
-        .shop-nav { display: flex; background: var(--d-green); }
-        .shop-tab { flex: 1; padding: 20px; text-align: center; color: white; font-weight: bold; cursor: pointer; border-bottom: 5px solid transparent; }
-        .tab-on { background: #fff; color: var(--d-green); border-bottom-color: var(--gold); }
-        .shop-grid { flex: 1; overflow-y: auto; display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; padding: 20px; }
-        .item-card { background: #f9f9f9; padding: 15px; border-radius: 20px; text-align: center; border-bottom: 5px solid #ddd; }
+        /* MODALS */
+        .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 3000; align-items: center; justify-content: center; }
+        .modal-body { width: 92%; height: 80%; background: #fdfdfd; border-radius: 30px; overflow: hidden; display: flex; flex-direction: column; border: 6px solid var(--d-green); }
+        .tab-bar { display: flex; background: var(--d-green); }
+        .tab { flex: 1; padding: 15px; text-align: center; color: white; font-weight: bold; cursor: pointer; }
+        .tab.active-tab { background: #fff; color: var(--d-green); border-radius: 20px 20px 0 0; }
+        .grid { flex: 1; overflow-y: auto; display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; padding: 15px; }
+        .card { background: #fff; border: 2px solid #eee; padding: 10px; border-radius: 15px; text-align: center; }
 
         /* ENTITIES */
-        .plant { position: absolute; transform: translate(-50%, -100%); z-index: 10; text-align: center; }
-        .fox-body { position: absolute; font-size: 60px; z-index: 20; transition: 5s linear; }
-        .rocket-obj { position: absolute; font-size: 50px; z-index: 500; transition: 0.4s ease-in; }
-        .rain-drop { position: absolute; font-size: 30px; animation: rain 2s linear forwards; cursor: pointer; z-index: 1000; }
-        @keyframes rain { to { transform: translateY(110vh); } }
+        .soil { position: absolute; width: 60px; height: 30px; background: var(--clay); border-radius: 50%; transform: translate(-50%, -50%); opacity: 0.7; }
+        .plant { position: absolute; transform: translate(-50%, -100%); z-index: 10; font-size: 50px; cursor: pointer; }
+        .fox { position: absolute; font-size: 60px; z-index: 20; transition: 5s linear; cursor: pointer; }
+        .rocket { position: absolute; font-size: 40px; z-index: 500; transition: 0.5s cubic-bezier(0.6, -0.28, 0.735, 0.045); }
+        .rain { position: absolute; font-size: 25px; animation: rainFall 2s linear forwards; cursor: pointer; z-index: 100; }
+        @keyframes rainFall { to { transform: translateY(110vh); } }
 
         /* DOCK */
-        .dock { position: absolute; bottom: 20px; width: 100%; display: flex; justify-content: space-evenly; z-index: 2500; }
-        .dock-btn { width: 75px; height: 75px; border-radius: 25px; border: 4px solid white; font-size: 35px; background: white; cursor: pointer; box-shadow: 0 5px 15px rgba(0,0,0,0.2); }
+        .dock { position: absolute; bottom: 25px; width: 100%; display: flex; justify-content: space-evenly; z-index: 2500; }
+        .dock-btn { width: 70px; height: 70px; border-radius: 22px; border: 4px solid white; font-size: 32px; background: white; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 6px 12px var(--shadow); }
     </style>
 </head>
 <body>
 
-<div class="world" id="main-world">
+<div class="world">
     <div class="sun">☀️</div>
-    <div class="ground" id="garden-click-area"></div>
+    <div class="meadow" id="click-zone"></div>
 
-    <div id="menu-screen" class="screen active-screen">
-        <div class="play-btn btn-mega" onclick="showGardens()">PLAY</div>
-        <button class="btn-mega" onclick="toggleModal('rating')">🏆 REYTING</button>
-        <button class="btn-mega" onclick="toggleLang()">🌐 TIL: UZ</button>
+    <div id="screen-menu" class="screen active">
+        <h1 style="color:white; font-size: 45px; text-shadow: 4px 4px var(--d-green); margin-bottom: 30px;">R-NATURE</h1>
+        <div class="play-btn" onclick="openGardens()">PLAY</div>
+        <button class="btn" onclick="openModal('rating')">🏆 REYTING</button>
+        <button class="btn" onclick="openModal('lang')">🌐 TIL TANLASH</button>
     </div>
 
-    <div id="garden-list-screen" class="screen" style="background: rgba(0,0,0,0.8);">
-        <div class="modal-inner" style="height: 60%; width: 85%;">
+    <div id="screen-gardens" class="screen" style="background: rgba(0,0,0,0.7);">
+        <div class="modal-body" style="height: 60%;">
             <h2 style="padding: 20px; text-align: center;">MENING BOG'LARIM</h2>
-            <div id="garden-scroll" style="flex:1; overflow-y:auto; padding: 20px;"></div>
-            <button class="btn-mega" onclick="createNewGarden()">+ YANGI BOG' (1000 RC)</button>
-            <button class="btn-mega" style="background:#f44336; color:white;" onclick="openScreen('menu-screen')">ORQAGA</button>
+            <div id="gardens-list" style="flex:1; overflow-y:auto; padding: 15px;"></div>
+            <button class="btn" onclick="addGarden()">+ YANGI BOG' (1000 RC)</button>
+            <button class="btn" style="background:#f44336; color:white;" onclick="goToMenu()">🏠 ORQAGA</button>
         </div>
     </div>
 
-    <div id="game-screen" class="screen">
+    <div id="screen-game" class="screen">
         <div class="hud">
-            <div class="stat-card">💰 <span id="rc-val">0</span></div>
-            <div class="stat-card">📦 <span id="fruit-val">0</span></div>
-            <div class="stat-card" onclick="openScreen('garden-list-screen')">🏡 BOG'</div>
+            <div class="stat-box">💰 <span id="rc-count">0</span></div>
+            <div class="stat-box">📦 <span id="fruit-count">0</span></div>
+            <div class="stat-box" onclick="openGardens()">🏡 BOG'</div>
         </div>
         
-        <div id="entity-layer" style="width:100%; height:100%; position:relative; pointer-events: none;"></div>
+        <div id="game-layer" style="width:100%; height:100%; position:relative; pointer-events: none;"></div>
 
         <div class="dock">
-            <button class="dock-btn" style="background:#4caf50" onclick="toggleModal('shop')">🛒</button>
-            <button class="dock-btn" style="background:#f44336" onclick="megaRocket()">🚀</button>
+            <button class="dock-btn" style="background:#4caf50" onclick="openModal('shop')">🛒</button>
+            <button class="dock-btn" style="background:#f44336" onclick="fireRocket()">🚀</button>
             <button class="dock-btn" style="background:#ff9800" onclick="openChest()">🎁</button>
-            <button class="dock-btn" style="background:#2196f3" onclick="startWeather()">🌧️</button>
-            <button class="dock-btn" style="background:#9c27b0" onclick="inviteFriends()">👥</button>
+            <button class="dock-btn" style="background:#2196f3" onclick="startRain()">🌧️</button>
+            <button class="dock-btn" style="background:#9c27b0" onclick="invite()">👥</button>
         </div>
     </div>
 </div>
 
-<div id="shop-modal" class="modal">
-    <div class="modal-inner">
-        <div class="shop-nav">
-            <div class="shop-tab tab-on" onclick="switchShop('seeds', this)">KO'CHATLAR</div>
-            <div class="shop-tab" onclick="switchShop('tools', this)">USKUNALAR</div>
-            <div class="shop-tab" onclick="switchShop('decor', this)">O'YINCHOQLAR</div>
+<div id="modal-container" class="modal">
+    <div class="modal-body">
+        <div class="tab-bar">
+            <div class="tab active-tab" onclick="switchTab('seeds', this)">KO'CHAT</div>
+            <div class="tab" onclick="switchTab('tools', this)">ASBOB</div>
+            <div class="tab" onclick="switchTab('decor', this)">BEZAK</div>
         </div>
-        <div id="shop-items" class="shop-grid"></div>
-        <button class="btn-mega" style="margin:0; border-radius:0; background:#333; color:white;" onclick="closeModal()">YOPISH</button>
+        <div id="shop-grid" class="grid"></div>
+        <button class="btn" style="margin:0; border-radius:0; background:#333; color:white;" onclick="closeModal()">YOPISH</button>
     </div>
 </div>
 
 <script>
-    /* THE ULTIMATE ENGINE SCRIPT
-       Bu yerda 10,000 dan ortiq obyektlar mantiqi joylashgan.
-    */
+    /* GAME ENGINE V2.0 */
     const tg = window.Telegram.WebApp;
     tg.expand();
-    
-    // Firebase Init
+
+    // Firebase (Testing purposes)
     const firebaseConfig = { databaseURL: "https://r-nature-default-rtdb.firebaseio.com/" };
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
-    const uid = tg.initDataUnsafe.user ? tg.initDataUnsafe.user.id : "dev_user";
+    const uid = tg.initDataUnsafe.user ? tg.initDataUnsafe.user.id : "local_test_01";
 
-    // O'yin holati
+    // Game State
     let u = {
-        bal: 1000, fruits: 0, 
-        gardens: [{name: "Asosiy Bog'", plants: []}],
-        inv: [], cur: 0, lastChest: 0
+        bal: 500, fruits: 0, 
+        gardens: [{name: "Voha", plants: []}],
+        inv: [], cur: 0, lastC: 0
     };
 
-    // ULKAN SHOP BAZASI (1000+ qatorlik mantiq)
-    const SHOP_DB = {
-        seeds: Array.from({length: 30}, (_, i) => ({id: `s${i}`, n: `Daraxt v${i+1}`, p: 100+(i*50), i: ['🍎','🍐','🍊','🍋','🍒','🍑','🥭','🍍','🌳','🌲'][i%10]})),
-        tools: [
-            {id: 't1', n: 'Ketmon', p: 500, i: '⛏️'},
-            {id: 't2', n: 'Dron', p: 10000, i: '🚁'},
-            {id: 't3', n: 'Robot Fermer', p: 100000, i: '🤖'}
-        ],
-        decor: []
+    // Database
+    const DB = {
+        seeds: Array.from({length: 20}, (_, i) => ({id: `s${i}`, n: `Tree ${i+1}`, p: 50+(i*20), i: ['🍎','🍐','🍊','🍋','🍒','🍑','🥑','🌳','🌲','🌵'][i%10]})),
+        tools: [{id: 't1', n: 'Dron', p: 5000, i: '🚁'}, {id: 't2', n: 'Robot', p: 50000, i: '🤖'}],
+        decor: Array.from({length: 30}, (_, i) => ({id: `d${i}`, n: `Toy ${i+1}`, p: 20+i*2, i: ['🔴','🔵','🟡','🟢','🟣','🌈','🎡','🎈','🎁','⭐'][i%10]}))
     };
-    // 100 ta rang-barang o'yinchoqlar
-    const icons = ['🔴','🔵','🟡','🟢','🟣','🌈','🎡','🎈','🎁','⭐','🔮','💎','🧸','🔔','🕯️'];
-    for(let i=0; i<100; i++) SHOP_DB.decor.push({id:`d${i}`, n:`O'yinchoq #${i+1}`, p:50+i, i:icons[i%icons.length]});
-
-    let currentShopTab = 'seeds';
 
     function init() {
         db.ref('users/' + uid).on('value', s => {
             if(s.exists()) u = s.val();
-            updateUI();
+            refreshUI();
         });
-        setInterval(spawnFox, 15000);
+        setInterval(spawnFox, 12000);
     }
 
-    function updateUI() {
-        document.getElementById('rc-val').innerText = Math.floor(u.bal);
-        document.getElementById('fruit-val').innerText = u.fruits;
+    function refreshUI() {
+        document.getElementById('rc-count').innerText = Math.floor(u.bal);
+        document.getElementById('fruit-count').innerText = u.fruits;
     }
 
+    // Navigation
     function openScreen(id) {
-        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active-screen'));
-        document.getElementById(id).classList.add('active-screen');
+        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+        document.getElementById('screen-' + id).classList.add('active');
     }
 
-    // BOG'LAR
-    function showGardens() {
-        openScreen('garden-list-screen');
-        const cont = document.getElementById('garden-scroll');
-        cont.innerHTML = '';
+    function goToMenu() { openScreen('menu'); }
+    function openGardens() {
+        openScreen('gardens');
+        const list = document.getElementById('gardens-list');
+        list.innerHTML = '';
         u.gardens.forEach((g, i) => {
-            cont.innerHTML += `
-                <div class="stat-card" style="margin-bottom:10px; justify-content:space-between;">
+            list.innerHTML += `
+                <div class="stat-box" style="margin-bottom:10px; justify-content:space-between; pointer-events:auto;">
                     <b>${g.name}</b>
-                    <button class="btn-mega" style="padding:10px 20px; margin:0; font-size:14px;" onclick="enterGarden(${i})">KIRISH</button>
+                    <button class="btn" style="padding:5px 15px; margin:0; font-size:14px;" onclick="enterGarden(${i})">KIRISH</button>
                 </div>`;
         });
     }
 
-    function createNewGarden() {
-        if(u.bal >= 1000) {
-            u.bal -= 1000;
-            u.gardens.push({name: "Bog' " + (u.gardens.length + 1), plants: []});
-            save(); showGardens();
-        } else tg.showAlert("RC yetarli emas!");
+    function addGarden() {
+        if(u.bal >= 1000) { u.bal -= 1000; u.gardens.push({name: "Bog' " + (u.gardens.length + 1), plants: []}); save(); openGardens(); }
+        else tg.showAlert("RC yetarli emas!");
     }
 
     function enterGarden(i) {
-        u.cur = i;
-        openScreen('game-screen');
-        renderPlants();
+        u.cur = i; openScreen('game'); renderPlants();
     }
 
+    // Gameplay
     function renderPlants() {
-        const layer = document.getElementById('entity-layer');
-        layer.innerHTML = '';
+        const layer = document.getElementById('game-layer'); layer.innerHTML = '';
         const g = u.gardens[u.cur];
         if(!g.plants) g.plants = [];
         g.plants.forEach((p, idx) => {
             const div = document.createElement('div');
-            div.className = 'plant';
-            div.style.left = p.x + 'px'; div.style.top = p.y + 'px';
+            div.className = 'plant'; div.style.left = p.x + 'px'; div.style.top = p.y + 'px';
             div.style.pointerEvents = 'auto';
-            
             const isGrown = (Date.now() - p.t) > 10000;
-            div.innerHTML = isGrown ? `<div style="font-size:55px;">${p.i}</div>` : `<div style="font-size:30px;">🌱</div>`;
-            
+            div.innerHTML = isGrown ? `<div>${p.i}</div>` : `<div style="font-size:30px">🌱</div>`;
             if(isGrown) {
-                const box = document.createElement('div');
-                box.innerText = '📦'; box.style.cursor = 'pointer';
-                box.onclick = (e) => {
-                    e.stopPropagation();
-                    u.fruits++; u.bal += 5; g.plants.splice(idx, 1);
-                    save(); renderPlants();
-                };
-                div.appendChild(box);
+                const h = document.createElement('div'); h.innerText = '📦'; h.style.fontSize = '20px';
+                h.onclick = (e) => { e.stopPropagation(); u.fruits++; u.bal += 5; g.plants.splice(idx,1); save(); renderPlants(); };
+                div.appendChild(h);
             }
             layer.appendChild(div);
         });
     }
 
-    // CLICK AREA
-    document.getElementById('garden-click-area').onclick = (e) => {
-        const seedIdx = u.inv.findIndex(x => x.id.startsWith('s'));
-        if(seedIdx > -1) {
-            const seed = u.inv[seedIdx];
-            u.inv.splice(seedIdx, 1);
+    document.getElementById('click-zone').onclick = (e) => {
+        const sIdx = u.inv.findIndex(x => x.id.startsWith('s'));
+        if(sIdx > -1) {
+            const seed = u.inv[sIdx]; u.inv.splice(sIdx, 1);
             u.gardens[u.cur].plants.push({x: e.clientX, y: e.clientY, t: Date.now(), i: seed.i});
             save(); renderPlants();
-        } else {
-            tg.showAlert("Avval shopdan ko'chat sotib oling!");
+        } else if(document.getElementById('screen-game').classList.contains('active')) {
+            const soil = document.createElement('div'); soil.className = 'soil'; soil.style.left = e.clientX+'px'; soil.style.top = e.clientY+'px';
+            document.getElementById('game-layer').appendChild(soil); setTimeout(() => soil.remove(), 2000);
         }
     };
 
-    // TULKI VA RAKETA
-    let fox = null;
+    // Enemies & Defense
+    let activeFox = null;
     function spawnFox() {
-        if(fox || !document.getElementById('game-screen').classList.contains('active-screen')) return;
-        fox = document.createElement('div');
-        fox.className = 'fox-body';
-        fox.innerHTML = '🦊<br><small style="font-size:12px; background:white; color:red; padding:2px; border-radius:5px;">O\'G\'RI</small>';
-        fox.style.left = '-100px'; fox.style.bottom = '150px';
-        document.body.appendChild(fox);
-        setTimeout(() => fox.style.left = '45%', 100);
-        setTimeout(() => { if(fox) { fox.remove(); fox = null; } }, 8000);
+        if(activeFox || !document.getElementById('screen-game').classList.contains('active')) return;
+        activeFox = document.createElement('div');
+        activeFox.className = 'fox'; activeFox.innerHTML = '🦊';
+        activeFox.style.left = '-100px'; activeFox.style.bottom = '180px';
+        document.body.appendChild(activeFox);
+        setTimeout(() => activeFox.style.left = '45%', 100);
+        setTimeout(() => { if(activeFox) { activeFox.remove(); activeFox = null; } }, 7000);
     }
 
-    function megaRocket() {
-        if(!fox) return;
-        const r = document.createElement('div');
-        r.className = 'rocket-obj'; r.innerText = '🚀';
+    function fireRocket() {
+        if(!activeFox) return;
+        const r = document.createElement('div'); r.className = 'rocket'; r.innerText = '🚀';
         r.style.left = '50%'; r.style.bottom = '50px';
         document.body.appendChild(r);
-        setTimeout(() => {
-            const rect = fox.getBoundingClientRect();
-            r.style.left = rect.left + 'px'; r.style.top = rect.top + 'px';
-        }, 50);
-        setTimeout(() => {
-            fox.innerHTML = '💥'; u.bal += 10; updateUI(); r.remove();
-            setTimeout(() => { fox.remove(); fox = null; }, 500);
-        }, 500);
+        setTimeout(() => { const rect = activeFox.getBoundingClientRect(); r.style.left = rect.left+'px'; r.style.top = rect.top+'px'; }, 50);
+        setTimeout(() => { activeFox.innerHTML = '💥'; u.bal += 10; refreshUI(); r.remove(); setTimeout(() => { activeFox.remove(); activeFox = null; }, 500); }, 500);
     }
 
-    // WEATHER
-    function startWeather() {
-        tg.showAlert("Yomg'ir boshlandi! Har bir tomchi +1 RC");
-        let i = 0;
-        const interval = setInterval(() => {
-            const d = document.createElement('div');
-            d.className = 'rain-drop'; d.innerText = '💧';
-            d.style.left = Math.random()*90 + '%'; d.style.top = '-50px';
+    // Weather & Rewards
+    function startRain() {
+        tg.showAlert("Yomg'ir! Tutib oling 💧");
+        let i = 0; const inv = setInterval(() => {
+            const d = document.createElement('div'); d.className = 'rain'; d.innerText = '💧';
+            d.style.left = Math.random()*90+'%'; d.style.top = '-50px';
             document.body.appendChild(d);
-            d.onclick = () => { u.bal += 1; updateUI(); d.remove(); };
+            d.onclick = () => { u.bal += 1; refreshUI(); d.remove(); };
             setTimeout(() => d.remove(), 2000);
-            if(i++ > 30) clearInterval(interval);
-        }, 300);
+            if(i++ > 25) clearInterval(inv);
+        }, 400);
     }
 
-    // SHOP
-    function toggleModal(type) {
-        if(type === 'shop') {
-            document.getElementById('shop-modal').style.display = 'flex';
-            switchShop('seeds', document.querySelector('.shop-tab'));
-        }
+    function openChest() {
+        if(Date.now() - u.lastC > 60000) {
+            const b = Math.floor(Math.random()*50)+20; u.bal += b; u.lastC = Date.now(); save();
+            tg.showAlert("🎁 Sandiqdan " + b + " RC chiqdi!");
+        } else tg.showAlert("Sandiq har minutda bir marta!");
     }
 
-    function switchShop(tab, el) {
-        currentShopTab = tab;
-        document.querySelectorAll('.shop-tab').forEach(t => t.classList.remove('tab-on'));
-        el.classList.add('tab-on');
-        const grid = document.getElementById('shop-items');
-        grid.innerHTML = '';
-        SHOP_DB[tab].forEach(item => {
-            grid.innerHTML += `
-                <div class="item-card">
-                    <div style="font-size:40px;">${item.i}</div>
-                    <div style="font-size:12px; font-weight:bold; margin:5px 0;">${item.n}</div>
-                    <button class="btn-mega" style="padding:5px 15px; font-size:12px; margin:0;" onclick="buyItem('${item.id}', '${tab}')">${item.p} RC</button>
-                </div>`;
+    // Shop System
+    function openModal(type) {
+        document.getElementById('modal-container').style.display = 'flex';
+        switchTab('seeds', document.querySelector('.tab'));
+    }
+
+    function switchTab(t, el) {
+        document.querySelectorAll('.tab').forEach(x => x.classList.remove('active-tab'));
+        el.classList.add('active-tab');
+        const grid = document.getElementById('shop-grid'); grid.innerHTML = '';
+        DB[t].forEach(item => {
+            grid.innerHTML += `<div class="card"><div style="font-size:35px">${item.i}</div><div style="font-size:10px">${item.n}</div><button class="btn" style="padding:5px; font-size:12px; box-shadow:none; margin:5px 0;" onclick="buyItem('${item.id}', '${t}')">${item.p} RC</button></div>`;
         });
     }
 
-    window.buyItem = (id, tab) => {
-        const item = SHOP_DB[tab].find(x => x.id === id);
-        if(u.bal >= item.p) {
-            u.bal -= item.p;
-            u.inv.push(item);
-            save(); tg.HapticFeedback.notificationOccurred('success');
-        } else tg.showAlert("RC yetarli emas!");
+    window.buyItem = (id, t) => {
+        const item = DB[t].find(x => x.id === id);
+        if(u.bal >= item.p) { u.bal -= item.p; u.inv.push(item); save(); tg.HapticFeedback.notificationOccurred('success'); }
+        else tg.showAlert("Pul yetarli emas!");
     };
 
-    function openChest() {
-        const now = Date.now();
-        if(now - u.lastChest > 60000) {
-            const bonus = Math.floor(Math.random()*50) + 20;
-            u.bal += bonus; u.lastChest = now; save();
-            tg.showAlert("Sandiqdan " + bonus + " RC chiqdi! 🎁");
-        } else tg.showAlert("Sandiqni har minutda bir marta ochish mumkin!");
+    function invite() {
+        tg.openTelegramLink("https://t.me/share/url?url=https://t.me/RPlay_bot?start=" + uid);
+        u.bal += 100; save();
     }
 
-    function inviteFriends() {
-        const link = "https://t.me/share/url?url=https://t.me/RPlay_game_bot?start=" + uid;
-        tg.openTelegramLink(link);
-        u.bal += 50; save();
-    }
-
-    function closeModal() { document.getElementById('shop-modal').style.display = 'none'; }
+    function closeModal() { document.getElementById('modal-container').style.display = 'none'; }
     function save() { db.ref('users/' + uid).set(u); }
 
     init();
