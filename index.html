@@ -3,111 +3,105 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>R-Nature: Full Logic</title>
+    <title>R-Nature: Definitive Edition</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
     <style>
         * { -webkit-tap-highlight-color: transparent; box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
         body { 
-            font-family: 'Segoe UI', Tahoma, sans-serif; 
-            background: #2e7d32; 
-            background: linear-gradient(to bottom, #87CEEB 0%, #2e7d32 100%);
+            font-family: 'Arial', sans-serif; 
+            background: #4caf50; 
             overflow: hidden; height: 100vh;
         }
         
-        /* Screens */
         #lang-screen, #menu-screen, #garden-list-screen, #game-screen { position: fixed; inset: 0; display: none; flex-direction: column; align-items: center; justify-content: center; z-index: 1000; }
-        
-        /* UI Elements */
-        .pill { background: rgba(255, 255, 255, 0.9); padding: 12px 20px; border-radius: 25px; border: 3px solid #4CAF50; font-weight: 900; color: #2e7d32; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
-        .top-ui { position: absolute; top: 15px; width: 100%; padding: 0 15px; z-index: 1100; display: flex; flex-direction: column; gap: 8px; }
-        .energy-bar-wrap { width: 100%; height: 15px; background: rgba(0,0,0,0.3); border-radius: 10px; overflow: hidden; border: 2px solid #fff; }
-        #energy-fill { height: 100%; background: linear-gradient(90deg, #FFD700, #FFA500); width: 100%; transition: 0.4s; }
 
-        /* Garden Elements */
-        #garden-canvas { width: 100%; height: 100%; position: relative; background: url('https://img.freepik.com/free-vector/hand-drawn-flat-design-landscape-background_23-2149141444.jpg') center bottom/cover; }
-        .soil-patch { position: absolute; width: 90px; height: 45px; background: #5d4037; border-radius: 50%; transform: translate(-50%, -50%); z-index: 1; border: 3px solid #3e2723; box-shadow: inset 0 0 15px #000; }
-        .plant { position: absolute; transform: translate(-50%, -100%); z-index: 2; transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275); cursor: pointer; }
+        .pill { background: white; padding: 12px 24px; border-radius: 30px; border: 3px solid #2e7d32; font-weight: bold; color: #2e7d32; cursor: pointer; box-shadow: 0 4px 0 #2e7d32; margin: 5px; }
+        .pill:active { transform: translateY(2px); box-shadow: 0 2px 0 #2e7d32; }
+
+        .top-ui { position: absolute; top: 10px; width: 100%; padding: 0 15px; z-index: 1100; pointer-events: none; }
+        .top-ui * { pointer-events: auto; }
+
+        #garden-canvas { width: 100%; height: 100%; position: relative; background: url('https://img.freepik.com/free-vector/spring-landscape-scene_23-2148852379.jpg') center bottom/cover; }
         
-        /* Weapon Physicality */
-        #gun-visual { 
-            position: absolute; bottom: 120px; right: 30px; font-size: 70px; z-index: 5000; 
-            transform-origin: center center; pointer-events: none; transition: transform 0.05s;
+        .soil-patch { position: absolute; width: 80px; height: 40px; background: #5d4037; border-radius: 50%; transform: translate(-50%, -50%); z-index: 1; border: 2px solid #3e2723; }
+        .plant { position: absolute; transform: translate(-50%, -100%); z-index: 2; transition: all 0.5s ease; cursor: pointer; }
+
+        /* Miltiq - doimiy o'ng burchakda */
+        #gun-container { 
+            position: absolute; bottom: 100px; right: 40px; width: 80px; height: 80px; 
+            z-index: 5000; pointer-events: none; display: flex; align-items: center; justify-content: center;
         }
+        #gun-visual { font-size: 60px; transform-origin: center center; }
 
-        /* Enemies & Rain */
-        .enemy { position: absolute; font-size: 50px; z-index: 2000; filter: drop-shadow(0 5px 5px rgba(0,0,0,0.3)); }
+        .enemy { position: absolute; font-size: 50px; z-index: 2000; transition: left 8s linear; pointer-events: auto; cursor: crosshair; }
         .drop { position: absolute; font-size: 40px; animation: fall 4s linear forwards; cursor: pointer; z-index: 3000; }
-        
+
         @keyframes fall { to { transform: translateY(110vh); } }
-        @keyframes kickback { 0% { transform: scale(1) rotate(0); } 50% { transform: scale(1.4) rotate(-25deg); } 100% { transform: scale(1) rotate(0); } }
-        .shooting { animation: kickback 0.15s ease-out; }
+        @keyframes kickback { 0% { transform: scale(1); } 50% { transform: scale(1.4) translateX(10px); } 100% { transform: scale(1); } }
+        .shooting { animation: kickback 0.1s ease; }
 
-        /* Garden List Container */
-        .list-box { background: rgba(255, 255, 255, 0.95); width: 90%; border-radius: 30px; padding: 25px; border: 5px solid #4CAF50; max-height: 60vh; overflow-y: auto; }
-        .garden-row { background: #e8f5e9; padding: 15px; border-radius: 15px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; border: 1px solid #c5e1a5; font-weight: bold; }
+        .list-container { background: white; width: 85%; border-radius: 20px; padding: 20px; border: 4px solid #2e7d32; max-height: 50vh; overflow-y: auto; }
+        .garden-row { background: #f0f0f0; padding: 10px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; border-radius: 10px; }
 
-        /* Modal */
-        #modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 6000; align-items: center; justify-content: center; }
-        .modal { background: #fff; width: 90%; border-radius: 30px; padding: 25px; border: 5px solid #4CAF50; }
+        #modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 6000; align-items: center; justify-content: center; }
+        .modal { background: white; width: 90%; border-radius: 20px; padding: 20px; }
     </style>
 </head>
 <body>
 
     <div id="lang-screen">
-        <h1 style="color:#fff; text-shadow: 2px 2px #000; margin-bottom: 20px;">CHOOSE LANGUAGE</h1>
-        <div id="lang-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; width: 85%;"></div>
+        <h1 style="color:white; margin-bottom:20px; text-shadow: 2px 2px #000;">CHOOSE LANGUAGE</h1>
+        <div id="lang-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;"></div>
     </div>
 
     <div id="menu-screen">
-        <h1 style="color:#fff; font-size: 60px; text-shadow: 4px 4px #2e7d32; font-weight: 900;">R-NATURE</h1>
-        <button onclick="showGardenList()" style="width:160px; height:160px; border-radius:50%; background:#FFC107; border:10px solid #fff; color:#fff; font-size:30px; font-weight:900; margin: 40px 0; box-shadow: 0 15px 30px rgba(0,0,0,0.3);">PLAY</button>
-        <div style="display:flex; gap:15px;">
-            <button class="pill" onclick="openShop()">🛒 MARKET</button>
-            <button class="pill" onclick="openRank()">🏆 RANK</button>
-        </div>
+        <h1 style="color:white; font-size: 50px; text-shadow: 3px 3px #2e7d32;">R-NATURE</h1>
+        <button onclick="showGardenList()" style="width:140px; height:140px; border-radius:50%; background:#FFC107; border:8px solid #fff; color:white; font-size:25px; font-weight:bold; margin: 30px 0;">PLAY</button>
+        <button class="pill" onclick="openShop()">🛒 SHOP</button>
     </div>
 
     <div id="garden-list-screen">
-        <h2 style="color:#fff; margin-bottom:20px;">MY GREEN GARDENS</h2>
-        <div class="list-box">
-            <button class="pill" style="width:100%; background:#4CAF50; color:#fff; margin-bottom:15px;" onclick="createNewGarden()">+ CREATE NEW GARDEN (FREE)</button>
+        <h2 style="color:white; margin-bottom:15px;">MY GARDENS</h2>
+        <div class="list-container">
             <div id="gardens-container"></div>
         </div>
-        <button class="pill" style="margin-top:20px; background:#f44336; color:#fff;" onclick="location.reload()">🏠 HOME</button>
+        <button class="pill" style="margin-top:20px; background:#4CAF50; color:white;" onclick="createNewGarden()">+ ADD FREE GARDEN</button>
+        <button class="pill" onclick="location.reload()">🏠 BACK</button>
     </div>
 
     <div id="game-screen">
         <div class="top-ui">
-            <div style="display:flex; justify-content:space-between; align-items:center;">
+            <div style="display:flex; justify-content:space-between;">
                 <button class="pill" onclick="showGardenList()">🔙</button>
                 <div class="pill">💰 <span id="u-bal">0</span> RC</div>
-                <div class="pill">⚡ <span id="u-nrg">0</span>%</div>
+                <div class="pill">⚡ <span id="u-nrg">0</span></div>
             </div>
-            <div class="energy-bar-wrap"><div id="energy-fill"></div></div>
-            <div style="display:flex; justify-content:space-between; color:#fff; font-weight:bold; font-size:14px; text-shadow:1px 1px #000;">
-                <span>🔫 MILTIQ: REAL-TIME</span>
-                <span>🌧️ SUV: <span id="u-water">0</span></span>
+            <div style="color:white; font-weight:bold; text-shadow:1px 1px #000; margin-top:5px;">
+                🔫 AMMO: UNLIMITED | 💧 WATER: <span id="u-water">0</span>
             </div>
         </div>
 
         <div id="garden-canvas"></div>
-        <div id="gun-visual">🔫</div>
+        
+        <div id="gun-container">
+            <div id="gun-visual">🔫</div>
+        </div>
 
-        <div style="position:absolute; bottom:30px; display:flex; gap:15px; z-index:1100;">
-            <div class="pill" onclick="openInv()" style="font-size:25px;">🎒</div>
-            <div class="pill" onclick="openShop()" style="font-size:25px;">🛒</div>
-            <div class="pill" onclick="inviteFriends()" style="font-size:15px;">👥 +10RC</div>
-            <div class="pill" onclick="startRain()" style="font-size:25px;">🌧️</div>
+        <div style="position:absolute; bottom:20px; display:flex; gap:10px; z-index:1100;">
+            <button class="pill" onclick="openInv()">🎒</button>
+            <button class="pill" onclick="openShop()">🛒</button>
+            <button class="pill" onclick="inviteFriends()">👥 +10RC</button>
+            <button class="pill" onclick="startRain()">🌧️</button>
         </div>
     </div>
 
     <div id="modal-overlay">
         <div class="modal">
             <h2 id="modal-title" style="text-align:center;"></h2>
-            <div id="modal-content" style="margin-top:20px;"></div>
-            <button class="pill" style="width:100%; margin-top:20px;" onclick="closeModal()">CLOSE</button>
+            <div id="modal-content" style="margin-top:15px;"></div>
+            <button class="pill" style="width:100%; margin-top:15px;" onclick="closeModal()">CLOSE</button>
         </div>
     </div>
 
@@ -116,27 +110,25 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
     const tg = window.Telegram.WebApp;
-    const uid = tg.initDataUnsafe.user ? tg.initDataUnsafe.user.id : "tester_id";
+    const uid = tg.initDataUnsafe.user ? tg.initDataUnsafe.user.id : "local_tester";
 
     let u = {
-        bal: 150, nrg: 100, water: 20, lang: null, 
-        gardens: [{ name: "Asosiy Bog'", plants: [] }],
-        currentIdx: 0, inv: {"Rose": 3}, name: tg.initDataUnsafe.user?.first_name || "O'yinchi"
+        bal: 150, nrg: 100, water: 0, lang: null, 
+        gardens: [{ name: "Main Garden", plants: [] }],
+        currentIdx: 0, inv: {"Rose": 5}
     };
 
     const shopItems = [
-        { id: "Rose", n: "Rose", p: 15, i: "🌹", t: 40 },
-        { id: "Sunf", n: "Sunflower", p: 45, i: "🌻", t: 120 },
-        { id: "Cactus", n: "Cactus", p: 100, i: "🌵", t: 250 },
-        { id: "Apple", n: "Apple Tree", p: 500, i: "🌳", t: 600 }
+        { id: "Rose", n: "Rose", p: 10, i: "🌹", t: 30 },
+        { id: "Sunf", n: "Sunflower", p: 40, i: "🌻", t: 100 },
+        { id: "Tree", n: "Apple Tree", p: 150, i: "🍎", t: 300 }
     ];
 
     function init() {
         const grid = document.getElementById('lang-grid');
-        const l_list = {uz:"O'zbek", en:"English", ru:"Русский", tr:"Türkçe", tj:"Тоҷикӣ", fr:"Français", de:"Deutsch", es:"Español", pt:"Português", it:"Italiano"};
-        Object.keys(l_list).forEach(c => {
-            const b = document.createElement('button'); b.className = 'pill'; b.innerText = l_list[c];
-            b.onclick = () => { u.lang = c; save(); checkScreen(); };
+        ["UZ", "EN", "RU", "TR", "TJ", "FR", "DE", "ES", "IT", "PT"].forEach(l => {
+            const b = document.createElement('button'); b.className = 'pill'; b.innerText = l;
+            b.onclick = () => { u.lang = l; save(); checkScreen(); };
             grid.appendChild(b);
         });
 
@@ -146,27 +138,23 @@
         });
 
         setInterval(gameTick, 1000);
-        setInterval(() => { if(u.nrg < 100) { u.nrg += 1; updateUI(); }}, 30000);
-
-        // MILTIQ FIZIKASI (Aylanish)
-        document.body.addEventListener('mousemove', (e) => {
+        
+        // Miltiqni aylantirish - Aniq mantiq
+        const handleMove = (e) => {
             if(document.getElementById('game-screen').style.display !== 'flex') return;
             const gun = document.getElementById('gun-visual');
             const rect = gun.getBoundingClientRect();
-            const center = { x: rect.left + rect.width/2, y: rect.top + rect.height/2 };
-            const angle = Math.atan2(e.clientY - center.y, e.clientX - center.x);
+            const gunX = rect.left + rect.width / 2;
+            const gunY = rect.top + rect.height / 2;
+            const mouseX = e.clientX || (e.touches ? e.touches[0].clientX : 0);
+            const mouseY = e.clientY || (e.touches ? e.touches[0].clientY : 0);
+            
+            const angle = Math.atan2(mouseY - gunY, mouseX - gunX);
             gun.style.transform = `rotate(${angle}rad)`;
-        });
+        };
 
-        document.body.addEventListener('touchstart', (e) => {
-            if(document.getElementById('game-screen').style.display !== 'flex') return;
-            const gun = document.getElementById('gun-visual');
-            const touch = e.touches[0];
-            const rect = gun.getBoundingClientRect();
-            const center = { x: rect.left + rect.width/2, y: rect.top + rect.height/2 };
-            const angle = Math.atan2(touch.clientY - center.y, touch.clientX - center.x);
-            gun.style.transform = `rotate(${angle}rad)`;
-        });
+        window.addEventListener('mousemove', handleMove);
+        window.addEventListener('touchmove', handleMove);
     }
 
     function checkScreen() {
@@ -178,9 +166,8 @@
     function gameTick() {
         if(document.getElementById('game-screen').style.display === 'flex') {
             renderPlants();
-            if(Math.random() < 0.008) spawnEnemy('worm');
-            if(Math.random() < 0.004) spawnEnemy('crow');
-            if(Math.random() < 0.003) spawnEnemy('fox');
+            // Zararkunandalar chiqish ehtimoli
+            if(Math.random() < 0.02) spawnEnemy();
         }
     }
 
@@ -190,14 +177,14 @@
         document.getElementById('garden-list-screen').style.display = 'flex';
         const container = document.getElementById('gardens-container'); container.innerHTML = "";
         u.gardens.forEach((g, i) => {
-            const row = document.createElement('div'); row.className = 'garden-row';
-            row.innerHTML = `<span>🏡 ${g.name} (${g.plants?.length || 0})</span> <button class="pill" onclick="u.currentIdx=${i}; enterGarden()">ENTER</button>`;
-            container.appendChild(row);
+            const d = document.createElement('div'); d.className = 'garden-row';
+            d.innerHTML = `<span>🏡 ${g.name}</span> <button class="pill" onclick="u.currentIdx=${i}; enterGarden()">GO</button>`;
+            container.appendChild(d);
         });
     }
 
     function createNewGarden() {
-        u.gardens.push({ name: "Garden #" + (u.gardens.length + 1), plants: [] });
+        u.gardens.push({ name: "Garden " + (u.gardens.length + 1), plants: [] });
         save(); showGardenList();
     }
 
@@ -211,7 +198,6 @@
         document.getElementById('u-bal').innerText = Math.floor(u.bal);
         document.getElementById('u-nrg').innerText = Math.floor(u.nrg);
         document.getElementById('u-water').innerText = u.water;
-        document.getElementById('energy-fill').style.width = u.nrg + "%";
     }
 
     function renderPlants() {
@@ -222,86 +208,95 @@
         g.plants.forEach((p, i) => {
             const it = shopItems.find(x => x.id === p.id);
             const age = (Date.now() - p.t) / 1000;
-
+            
+            // Tuproq
             const patch = document.createElement('div');
             patch.className = 'soil-patch'; patch.style.left = p.x+'px'; patch.style.top = p.y+'px';
             canvas.appendChild(patch);
 
+            // O'simlik bosqichlari
             const pl = document.createElement('div');
             pl.className = 'plant'; pl.style.left = p.x+'px'; pl.style.top = p.y+'px';
             
-            // O'sish bosqichlari (Realistik)
             if (age >= it.t) {
-                pl.innerHTML = `<div style="position:absolute;top:-40px;background:gold;padding:2px 10px;border-radius:10px;font-size:12px;">HARVEST</div>${it.i}`;
-                pl.style.fontSize = "55px";
-                pl.onclick = (e) => { e.stopPropagation(); u.bal += it.p*2.5; g.plants.splice(i, 1); save(); updateUI(); };
-            } else if (age < 8) {
-                pl.innerText = "🌱"; pl.style.fontSize = "20px"; // Kichik ko'chat
-            } else if (age < it.t/2) {
-                pl.innerText = "🌿"; pl.style.fontSize = "35px"; // O'rtacha
+                pl.innerHTML = `<div style="font-size:10px;background:gold;padding:2px;border-radius:5px;">READY</div>${it.i}`;
+                pl.style.fontSize = "50px";
+                pl.onclick = (e) => { e.stopPropagation(); u.bal += it.p*3; g.plants.splice(i,1); save(); updateUI(); };
+            } else if (age < 7) {
+                pl.innerText = "🌱"; pl.style.fontSize = "20px"; // Urug'
+            } else if (age < it.t / 2) {
+                pl.innerText = "🌿"; pl.style.fontSize = "35px"; // Maysa
             } else {
-                pl.innerText = "🌳"; pl.style.fontSize = "45px"; // Katta
+                pl.innerText = "🌳"; pl.style.fontSize = "45px"; // Daraxt
             }
             canvas.appendChild(pl);
         });
     }
 
     document.getElementById('garden-canvas').onclick = (e) => {
-        if(!window.selSeed || u.inv[window.selSeed] <= 0 || u.nrg < 10) return;
-        u.gardens[u.currentIdx].plants.push({ id: window.selSeed, x: e.clientX, y: e.clientY, t: Date.now() });
-        u.inv[window.selSeed]--; u.nrg -= 10; save(); updateUI(); renderPlants();
+        if(window.selectedSeed && u.inv[window.selectedSeed] > 0) {
+            u.gardens[u.currentIdx].plants.push({id: window.selectedSeed, x: e.clientX, y: e.clientY, t: Date.now()});
+            u.inv[window.selectedSeed]--;
+            save(); renderPlants();
+        }
     };
 
-    function inviteFriends() {
-        tg.openTelegramLink(`https://t.me/share/url?url=https://t.me/RPlay_game_bot?start=${uid}&text=Join my Garden!`);
-        u.bal += 10; save(); updateUI();
-        tg.showAlert("10 RC bonus qo'shildi! 🎁");
-    }
-
-    function spawnEnemy(type) {
+    function spawnEnemy() {
         const e = document.createElement('div'); e.className = 'enemy';
-        const icons = { worm: "🐛", crow: "🐦‍⬛", fox: "🦊" };
-        e.innerText = icons[type];
-        e.style.top = Math.random()*70+15+"%"; e.style.left = "-60px";
+        const types = ["🐛", "🐦‍⬛", "🦊"];
+        e.innerText = types[Math.floor(Math.random()*types.length)];
+        e.style.top = (Math.random()*60 + 20) + "%";
+        e.style.left = "-60px";
         document.body.appendChild(e);
 
+        // Miltiqdan otish mantiqi
         e.onclick = (ev) => {
             ev.stopPropagation();
             const gun = document.getElementById('gun-visual');
             gun.classList.add('shooting');
-            setTimeout(() => gun.classList.remove('shooting'), 150);
+            setTimeout(() => gun.classList.remove('shooting'), 100);
             e.remove();
-            u.bal += 2; updateUI(); // Zararkunandani o'ldirsa ham pul beradi
+            u.bal += 5; updateUI(); // Har bir hayvon uchun 5 RC
         };
 
+        // Hayvonning harakati
         setTimeout(() => {
-            e.style.transition = "left 6s linear"; e.style.left = "110%";
+            e.style.left = "110%";
             setTimeout(() => {
                 if(e.parentNode) {
+                    e.remove();
                     if(u.gardens[u.currentIdx].plants.length > 0) {
-                        u.gardens[u.currentIdx].plants.splice(0, 1);
-                        tg.showAlert("Zararkunanda o'simlikni yedi! 😟");
+                        u.gardens[u.currentIdx].plants.shift(); // Hayvon o'simlikni yedi
+                        renderPlants();
                     }
-                    e.remove(); renderPlants();
                 }
-            }, 6000);
-        }, 50);
+            }, 8000);
+        }, 100);
+    }
+
+    function inviteFriends() {
+        tg.openTelegramLink(`https://t.me/share/url?url=https://t.me/RPlay_game_bot?start=${uid}`);
+        // Telegram share oynasi ochilgandan keyin bonus beriladi
+        setTimeout(() => {
+            u.bal += 10; save(); updateUI();
+            tg.showAlert("Do'st taklif qilganingiz uchun +10 RC! 🎁");
+        }, 500);
     }
 
     function startRain() {
-        tg.showAlert("Yomg'ir! Har bir tomchi 1 RC! 🌧️");
-        const iv = setInterval(() => {
+        tg.showAlert("Yomg'ir! Tomchilarni tuting! 💧 = 1 RC");
+        const rain = setInterval(() => {
             const d = document.createElement('div'); d.className = 'drop'; d.innerText = "💧";
             d.style.left = Math.random()*90+"%"; d.style.top = "-50px";
             document.body.appendChild(d);
             d.onclick = () => { u.bal += 1; u.water += 1; updateUI(); d.remove(); };
             setTimeout(() => { if(d.parentNode) d.remove(); }, 4000);
-        }, 800);
-        setTimeout(() => clearInterval(iv), 10000);
+        }, 1000);
+        setTimeout(() => clearInterval(rain), 10000);
     }
 
     function openShop() {
-        document.getElementById('modal-title').innerText = "MARKET";
+        document.getElementById('modal-title').innerText = "SHOP";
         document.getElementById('modal-content').innerHTML = shopItems.map(it => `
             <div class="garden-row"><span>${it.i} ${it.n} (${it.p} RC)</span> <button class="pill" onclick="buy('${it.id}')">BUY</button></div>
         `).join('');
@@ -311,26 +306,14 @@
     window.buy = (id) => {
         const it = shopItems.find(x => x.id === id);
         if(u.bal >= it.p) { u.bal -= it.p; u.inv[id] = (u.inv[id]||0)+1; save(); updateUI(); }
-        else tg.showAlert("Mablag' kam!");
     };
 
     function openInv() {
         document.getElementById('modal-title').innerText = "MY BAG";
         let h = "";
-        for(let k in u.inv) if(u.inv[k]>0) h += `<div class="garden-row"><span>${k} (x${u.inv[k]})</span> <button class="pill" onclick="window.selSeed='${k}'; closeModal()">SELECT</button></div>`;
-        document.getElementById('modal-content').innerHTML = h || "Bag is empty";
+        for(let k in u.inv) if(u.inv[k]>0) h += `<div class="garden-row"><span>${k} (x${u.inv[k]})</span> <button class="pill" onclick="window.selectedSeed='${k}'; closeModal()">SELECT</button></div>`;
+        document.getElementById('modal-content').innerHTML = h || "Empty";
         document.getElementById('modal-overlay').style.display = 'flex';
-    }
-
-    function openRank() {
-        db.ref('users').orderByChild('bal').limitToLast(10).once('value', s => {
-            let list = []; s.forEach(c => list.push(c.val())); list.reverse();
-            document.getElementById('modal-title').innerText = "TOP FARMERS";
-            document.getElementById('modal-content').innerHTML = list.map((p, i) => `
-                <div class="garden-row"><span>${i+1}. ${p.name}</span> <b>${Math.floor(p.bal)} RC</b></div>
-            `).join('');
-            document.getElementById('modal-overlay').style.display = 'flex';
-        });
     }
 
     function save() { db.ref('users/' + uid).set(u); }
