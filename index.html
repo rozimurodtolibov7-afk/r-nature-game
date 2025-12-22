@@ -3,222 +3,334 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>R-Nature: Ultimate</title>
+    <title>R-Nature World</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
     <style>
         * { -webkit-tap-highlight-color: transparent; box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
-        body { font-family: 'Arial', sans-serif; background: #fff; overflow: hidden; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #ffffff; overflow: hidden; color: #333; }
         
-        /* UI Elementlari */
-        .header { position: absolute; top: 10px; width: 100%; padding: 0 15px; z-index: 10; display: flex; flex-direction: column; gap: 5px; }
-        .stats-row { display: flex; justify-content: space-between; }
-        .stat-pill { background: #f0f0f0; padding: 5px 15px; border-radius: 20px; font-weight: bold; border: 1px solid #ddd; display: flex; align-items: center; gap: 5px; }
-        .energy-container { width: 100%; height: 10px; background: #eee; border-radius: 5px; overflow: hidden; }
-        #energy-fill { height: 100%; background: #ffcc00; width: 100%; transition: 0.3s; }
+        /* EKRANLAR */
+        #loading, #lang-screen, #menu-screen, #game-screen { position: fixed; inset: 0; display: none; flex-direction: column; align-items: center; justify-content: center; background: white; z-index: 1000; }
+        #loading { display: flex; }
 
-        /* O'yin Maydoni */
-        #garden { width: 100vw; height: 100vh; position: relative; background: #fff; }
-        .plant { position: absolute; transform: translate(-50%, -100%); font-size: 50px; text-align: center; }
-        .water-bubble { position: absolute; top: -40px; left: 50%; transform: translateX(-50%); background: #007aff; color: white; padding: 2px 10px; border-radius: 10px; font-size: 14px; animation: bounce 1s infinite; }
-        .harvest-tag { position: absolute; top: -55px; left: 50%; transform: translateX(-50%); background: #28a745; color: white; padding: 2px 10px; border-radius: 10px; font-size: 14px; }
-        .pest { position: absolute; font-size: 40px; z-index: 5; cursor: pointer; transition: 0.5s; }
+        /* UI TOP STATS */
+        .top-ui { position: absolute; top: 15px; width: 100%; padding: 0 20px; z-index: 1100; pointer-events: none; }
+        .stats-row { display: flex; justify-content: space-between; margin-bottom: 8px; pointer-events: auto; }
+        .pill { background: #f8f9fa; padding: 8px 15px; border-radius: 20px; border: 1.5px solid #eee; font-size: 14px; font-weight: bold; display: flex; align-items: center; gap: 6px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        .energy-wrapper { width: 100%; height: 12px; background: #eee; border-radius: 6px; overflow: hidden; border: 1px solid #ddd; }
+        #energy-bar { height: 100%; background: linear-gradient(90deg, #ffcc00, #ffeb3b); width: 100%; transition: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
 
-        /* Shop va Modallar */
-        #modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 100; align-items: center; justify-content: center; }
-        .modal { background: #fff; width: 90%; border-radius: 25px; padding: 20px; position: relative; max-height: 70vh; overflow-y: auto; }
-        .close-btn { position: absolute; top: 15px; right: 20px; font-size: 24px; color: #ff3b30; font-weight: bold; border: none; background: none; }
-        .item-card { display: flex; justify-content: space-between; align-items: center; padding: 15px 0; border-bottom: 1px solid #eee; }
-        .btn-buy { background: #007aff; color: white; padding: 8px 15px; border-radius: 12px; border: none; font-weight: bold; }
+        /* GARDEN AREA */
+        #garden { width: 100%; height: 100%; position: relative; background: #ffffff; cursor: crosshair; }
+        .plant { position: absolute; transform: translate(-50%, -100%); font-size: 50px; text-align: center; cursor: pointer; transition: transform 0.2s; }
+        .plant:active { transform: translate(-50%, -100%) scale(0.9); }
+        .water-req { position: absolute; top: -45px; left: 50%; transform: translateX(-50%); background: #007aff; color: white; padding: 4px 10px; border-radius: 12px; font-size: 12px; font-weight: bold; animation: pulse 1s infinite; }
+        .profit-tag { position: absolute; top: -60px; left: 50%; transform: translateX(-50%); background: #28a745; color: white; padding: 4px 10px; border-radius: 12px; font-size: 13px; font-weight: bold; }
 
-        /* Navigatsiya */
-        .bottom-nav { position: absolute; bottom: 30px; width: 100%; display: flex; justify-content: center; gap: 20px; }
-        .nav-icon { width: 60px; height: 60px; background: #f8f8f8; border-radius: 20px; border: 1px solid #eee; display: flex; align-items: center; justify-content: center; font-size: 30px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        /* MODALS */
+        #modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 2000; align-items: center; justify-content: center; backdrop-filter: blur(4px); }
+        .modal { background: #fff; width: 90%; max-width: 400px; border-radius: 30px; padding: 25px; position: relative; max-height: 80vh; overflow-y: auto; }
+        .close-btn { position: absolute; top: 15px; right: 20px; font-size: 28px; color: #ff3b30; font-weight: bold; background: none; border: none; cursor: pointer; }
+        .item-row { display: flex; justify-content: space-between; align-items: center; padding: 15px 0; border-bottom: 1px solid #f0f0f0; }
+        
+        /* NAVIGATION */
+        .nav-bar { position: absolute; bottom: 30px; display: flex; gap: 20px; z-index: 1100; }
+        .nav-icon { width: 65px; height: 65px; border-radius: 22px; background: #ffffff; border: 1.5px solid #eee; font-size: 30px; display: flex; align-items: center; justify-content: center; box-shadow: 0 8px 15px rgba(0,0,0,0.08); cursor: pointer; }
 
-        @keyframes bounce { 0%, 100% { transform: translate(-50%, 0); } 50% { transform: translate(-50%, -10px); } }
+        /* ANIMATIONS */
+        @keyframes pulse { 0% { opacity: 0.7; transform: translateX(-50%) scale(1); } 50% { opacity: 1; transform: translateX(-50%) scale(1.1); } 100% { opacity: 0.7; transform: translateX(-50%) scale(1); } }
+        
+        .pest { position: absolute; font-size: 45px; z-index: 1050; cursor: pointer; transition: 0.3s; animation: wobble 0.5s infinite; }
+        @keyframes wobble { 0%, 100% { transform: rotate(-10deg); } 50% { transform: rotate(10deg); } }
     </style>
 </head>
 <body>
 
-    <div class="header">
-        <div class="stats-row">
-            <div class="stat-pill">💰 <span id="balance">50</span></div>
-            <div class="stat-pill">⚡ <span id="energy-text">100/100</span></div>
-        </div>
-        <div class="energy-container"><div id="energy-fill"></div></div>
+    <div id="loading"><h1>R-NATURE...</h1></div>
+
+    <div id="lang-screen">
+        <h2 style="margin-bottom: 25px;">Tilni tanlang / Choose Language</h2>
+        <div id="lang-list" style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; width: 90%;"></div>
     </div>
 
-    <div id="garden"></div>
+    <div id="menu-screen">
+        <h1 style="color: #28a745; margin-bottom: 10px; font-size: 40px; font-weight: 900;">R-NATURE</h1>
+        <p style="color: #888; margin-bottom: 30px;">Fermerlik Strategiyasi</p>
+        <button onclick="startGame()" style="width: 150px; height: 150px; border-radius: 50%; background: #ffcc00; border: 8px solid #fff; box-shadow: 0 10px 25px rgba(0,0,0,0.1); color: white; font-size: 30px; font-weight: 900; cursor: pointer;">PLAY</button>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; width: 85%; margin-top: 40px;">
+            <button class="pill" style="justify-content: center; padding: 18px;" onclick="openShop()">🛒 Do'kon</button>
+            <button class="pill" style="justify-content: center; padding: 18px;" onclick="openRank()">🏆 Reyting</button>
+        </div>
+    </div>
 
-    <div class="bottom-nav">
-        <div class="nav-icon" onclick="openInventory()">🎒</div>
-        <div class="nav-icon" onclick="openShop()">🛒</div>
-        <div class="nav-icon" onclick="openRank()">🏆</div>
+    <div id="game-screen">
+        <div class="top-ui">
+            <div class="stats-row">
+                <div class="pill" onclick="goHome()" style="pointer-events: auto;">🏠</div>
+                <div class="pill">💰 <span id="u-bal">0</span></div>
+                <div class="pill">⚡ <span id="u-nrg">0</span>/100</div>
+            </div>
+            <div class="energy-wrapper"><div id="energy-bar"></div></div>
+        </div>
+
+        <div id="garden"></div>
+
+        <div class="nav-bar">
+            <div class="nav-icon" onclick="openInv()">🎒</div>
+            <div class="nav-icon" onclick="openShop()" style="color: #007aff;">🛒</div>
+            <div class="nav-icon" onclick="invite()">👥</div>
+        </div>
     </div>
 
     <div id="modal-overlay">
         <div class="modal">
             <button class="close-btn" onclick="closeModal()">✕</button>
-            <h2 id="modal-title" style="text-align:center; margin-bottom:20px;"></h2>
-            <div id="modal-body"></div>
+            <h2 id="m-title" style="text-align: center; margin-bottom: 20px; font-weight: 800;"></h2>
+            <div id="m-body"></div>
         </div>
     </div>
 
 <script>
-    // Firebase sozlamalari (Yuborgan rasmdagi loyihaga moslangan)
-    const firebaseConfig = { databaseURL: "https://r-nature-default-rtdb.firebaseio.com/" };
+    // FIREBASE INITIALIZATION
+    const firebaseConfig = { 
+        databaseURL: "https://r-nature-default-rtdb.firebaseio.com/",
+        projectId: "r-nature"
+    };
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
     const tg = window.Telegram.WebApp;
-    const uid = tg.initDataUnsafe.user ? tg.initDataUnsafe.user.id : "test_user";
+    const uid = tg.initDataUnsafe.user ? tg.initDataUnsafe.user.id : "local_test";
 
-    let userData = {
-        bal: 50, nrg: 100, lastDaily: 0, inv: {"Rose": 1}, planted: [],
-        lastNrgUpdate: Date.now(), name: tg.initDataUnsafe.user?.first_name || "Fermer"
+    // GAME STATE
+    let u = { 
+        bal: 50, nrg: 100, lang: null, inv: {"Rose": 1}, 
+        planted: [], lastDaily: 0, lastNrg: Date.now(),
+        name: tg.initDataUnsafe.user?.first_name || "Fermer"
     };
+    let selectedSeed = null;
 
-    const shopItems = [
-        { id: "Rose", name: "Atirgul", price: 10, img: "🌹", time: 300 },
-        { id: "Cactus", name: "Kaktus", price: 25, img: "🌵", time: 420 },
-        { id: "Sunf", name: "Kungaboqar", price: 60, img: "🌻", time: 600 },
-        { id: "Magic", name: "Sehrli Daraxt", price: 5000, img: "🌳", time: 3600 }
+    const items = [
+        { id: "Rose", n: "Atirgul", p: 10, i: "🌹", t: 300 }, // 5 min
+        { id: "Cactus", n: "Kaktus", p: 25, i: "🌵", t: 420 }, // 7 min
+        { id: "Sunf", n: "Kungaboqar", p: 60, i: "🌻", t: 600 }, // 10 min
+        { id: "Magic", n: "Sehrli Daraxt", p: 5000, i: "🌳", t: 3600 } // 1 soat
     ];
 
     function init() {
-        db.ref('users/' + uid).once('value', s => {
-            if (s.exists()) userData = s.val();
-            checkDailyReward();
-            updateUI();
-            setInterval(tick, 1000);
-            renderGarden();
+        const langBox = document.getElementById('lang-list');
+        const langs = { uz:"O'zbek", en:"English", ru:"Русский", tr:"Türkçe", tj:"Тоҷикӣ", de:"Deutsch", fr:"Français", es:"Español", pt:"Português", it:"Italiano" };
+        
+        Object.keys(langs).forEach(k => {
+            const btn = document.createElement('button');
+            btn.className = 'pill'; btn.style.justifyContent = 'center';
+            btn.innerText = langs[k];
+            btn.onclick = () => { u.lang = k; save(); checkDaily(); showMenu(); };
+            langBox.appendChild(btn);
         });
+
+        db.ref('users/' + uid).once('value', s => {
+            document.getElementById('loading').style.display = 'none';
+            if(s.exists()) {
+                u = {...u, ...s.val()};
+                if(u.lang) { checkDaily(); showMenu(); } 
+                else { document.getElementById('lang-screen').style.display = 'flex'; }
+            } else {
+                document.getElementById('lang-screen').style.display = 'flex';
+            }
+        });
+
+        // Loop cycles
+        setInterval(tick, 1000);
+        setInterval(() => { if(u.nrg < 100) { u.nrg++; updateUI(); save(); } }, 60000); // +1 energy per min
     }
 
-    function checkDailyReward() {
+    function checkDaily() {
         const now = Date.now();
-        if (now - userData.lastDaily > 86400000) {
-            userData.bal += 20;
-            userData.lastDaily = now;
+        if(now - u.lastDaily > 86400000) {
+            u.bal += 20;
+            u.lastDaily = now;
             save();
-            tg.showAlert("Xush kelibsiz! Kunlik bonus: 20 RC");
+            setTimeout(() => tg.showAlert("Xush kelibsiz! Har kungi sovg'a: 20 RC tabriklaymiz!"), 1000);
         }
     }
 
     function tick() {
-        // Energiya tiklanishi (1 min = +1 ⚡)
-        if (userData.nrg < 100 && Date.now() - userData.lastNrgUpdate > 60000) {
-            userData.nrg++;
-            userData.lastNrgUpdate = Date.now();
-            updateUI();
+        if(document.getElementById('game-screen').style.display === 'flex') {
+            renderGarden();
+            // Zararkunanda chiqish ehtimoli (har 30 soniyada 10% imkoniyat)
+            if(Math.random() < 0.003 && u.planted.length > 0) spawnPest();
         }
-        
-        // Zararkunanda chiqishi (10% imkoniyat)
-        if (Math.random() < 0.01 && userData.planted.length > 0) spawnPest();
-        
+    }
+
+    function showMenu() {
+        document.getElementById('lang-screen').style.display = 'none';
+        document.getElementById('menu-screen').style.display = 'flex';
+        document.getElementById('game-screen').style.display = 'none';
+        updateUI();
+    }
+
+    function startGame() {
+        document.getElementById('menu-screen').style.display = 'none';
+        document.getElementById('game-screen').style.display = 'flex';
         renderGarden();
     }
 
     function updateUI() {
-        document.getElementById('balance').innerText = userData.bal;
-        document.getElementById('energy-text').innerText = userData.nrg + "/100";
-        document.getElementById('energy-fill').style.width = userData.nrg + "%";
+        document.getElementById('u-bal').innerText = Math.floor(u.bal);
+        document.getElementById('u-nrg').innerText = u.nrg;
+        document.getElementById('energy-bar').style.width = u.nrg + "%";
     }
 
     function openShop() {
-        const modal = document.getElementById('modal-body');
-        document.getElementById('modal-title').innerText = "Do'kon";
-        modal.innerHTML = shopItems.map(it => `
-            <div class="item-card">
-                <span>${it.img} ${it.name} (${it.price} RC)</span>
-                <button class="btn-buy" onclick="buyItem('${it.id}')">Sotib olish</button>
-            </div>
-        `).join('');
+        document.getElementById('m-title').innerText = "DO'KON";
+        let h = "";
+        items.forEach(it => {
+            h += `<div class="item-row">
+                    <span>${it.i} ${it.n} <br><small>${it.p} RC | ${(it.t/60).toFixed(0)} min</small></span>
+                    <button class="pill" onclick="buyItem('${it.id}')">Sotib olish</button>
+                  </div>`;
+        });
+        document.getElementById('m-body').innerHTML = h;
         document.getElementById('modal-overlay').style.display = 'flex';
     }
 
     window.buyItem = (id) => {
-        const it = shopItems.find(x => x.id === id);
-        if (userData.bal >= it.price) {
-            userData.bal -= it.price;
-            userData.inv[id] = (userData.inv[id] || 0) + 1;
+        const it = items.find(x => x.id === id);
+        if(u.bal >= it.p) {
+            u.bal -= it.p;
+            u.inv[id] = (u.inv[id] || 0) + 1;
             save(); updateUI();
-        } else tg.showAlert("Mablag' yetarli emas!");
+            tg.HapticFeedback.notificationOccurred('success');
+        } else {
+            tg.showAlert("RC yetarli emas!");
+        }
     };
 
-    function openInventory() {
-        const modal = document.getElementById('modal-body');
-        document.getElementById('modal-title').innerText = "Sandiq";
-        let content = "";
-        for(let key in userData.inv) {
-            if(userData.inv[key] > 0) {
-                content += `<div class="item-card"><span>${key} (x${userData.inv[key]})</span><button class="btn-buy" onclick="sowSeed('${key}')">Ekish</button></div>`;
+    function openInv() {
+        document.getElementById('m-title').innerText = "SANDIQ";
+        let h = "";
+        let empty = true;
+        for(let key in u.inv) {
+            if(u.inv[key] > 0) {
+                empty = false;
+                const it = items.find(x => x.id === key) || {i:"📦", n:key};
+                h += `<div class="item-row">
+                        <span>${it.i} ${it.n} (x${u.inv[key]})</span>
+                        <button class="pill" style="background:#28a745; color:white;" onclick="selectSeed('${key}')">Ekish</button>
+                      </div>`;
             }
         }
-        modal.innerHTML = content || "Sandiq bo'sh";
+        document.getElementById('m-body').innerHTML = empty ? "<p style='text-align:center'>Sandiq bo'sh</p>" : h;
         document.getElementById('modal-overlay').style.display = 'flex';
     }
 
-    window.sowSeed = (id) => {
-        if (userData.nrg < 10) return tg.showAlert("Energiya kam!");
-        const it = shopItems.find(x => x.id === id);
-        const rect = document.getElementById('garden').getBoundingClientRect();
-        userData.planted.push({
-            id: id,
-            x: Math.random() * (rect.width - 50) + 25,
-            y: Math.random() * (rect.height - 150) + 75,
-            time: Date.now(),
-            watered: false
+    window.selectSeed = (id) => {
+        selectedSeed = id;
+        closeModal();
+        tg.showAlert("Endi ekranning istalgan joyiga bosing!");
+    };
+
+    document.getElementById('garden').onclick = (e) => {
+        if(!selectedSeed || u.inv[selectedSeed] <= 0) return;
+        if(u.nrg < 10) { tg.showAlert("⚡ Energiya kam (Kamida 10 kerak)!"); return; }
+
+        const rect = e.currentTarget.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+
+        u.planted.push({
+            id: selectedSeed,
+            x: x, y: y,
+            t: Date.now(),
+            w: false // watered
         });
-        userData.inv[id]--;
-        userData.nrg -= 10;
-        save(); closeModal(); updateUI(); renderGarden();
+
+        u.inv[selectedSeed]--;
+        u.nrg -= 10;
+        save(); updateUI(); renderGarden();
+        tg.HapticFeedback.impactOccurred('medium');
     };
 
     function renderGarden() {
         const g = document.getElementById('garden');
         g.innerHTML = '';
-        userData.planted.forEach((p, i) => {
-            const it = shopItems.find(x => x.id === p.id);
-            const age = (Date.now() - p.time) / 1000;
+        u.planted.forEach((p, i) => {
+            const it = items.find(x => x.id === p.id);
+            const age = (Date.now() - p.t) / 1000;
             const div = document.createElement('div');
             div.className = 'plant';
             div.style.left = p.x + 'px'; div.style.top = p.y + 'px';
 
-            if (age >= it.time) {
-                div.innerHTML = `<div class="harvest-tag">+${it.price * 2}</div>${it.img}`;
-                div.onclick = () => collect(i);
-            } else if (!p.watered) {
-                div.innerHTML = `<div class="water-bubble">🚰</div>🌱`;
-                div.onclick = () => { if(userData.nrg>=5){p.watered=true; userData.nrg-=5; save(); updateUI();}};
+            if(age >= it.t) {
+                div.innerHTML = `<div class="profit-tag">+${it.p * 2} RC</div>${it.i}`;
+                div.onclick = (e) => { e.stopPropagation(); collect(i); };
+            } else if(!p.w) {
+                div.innerHTML = `<div class="water-req">🚰 Sug'orish</div>🫘`;
+                div.onclick = (e) => { e.stopPropagation(); water(i); };
             } else {
-                div.innerText = age > it.time/2 ? "🌿" : "🌱";
+                div.innerText = age > (it.t / 2) ? "🌿" : "🌱";
             }
             g.appendChild(div);
         });
     }
 
-    function collect(i) {
-        const p = userData.planted[i];
-        const it = shopItems.find(x => x.id === p.id);
-        userData.bal += it.price * 2;
-        userData.planted.splice(i, 1);
+    function water(i) {
+        if(u.nrg < 5) { tg.showAlert("Suv quyish uchun 5⚡ energiya kerak!"); return; }
+        u.planted[i].w = true;
+        u.nrg -= 5;
         save(); updateUI(); renderGarden();
+        tg.HapticFeedback.impactOccurred('light');
+    }
+
+    function collect(i) {
+        const p = u.planted[i];
+        const it = items.find(x => x.id === p.id);
+        u.bal += it.p * 2;
+        u.planted.splice(i, 1);
+        save(); updateUI();
+        tg.HapticFeedback.notificationOccurred('success');
     }
 
     function spawnPest() {
         const pest = document.createElement('div');
-        pest.className = 'pest'; pest.innerText = "🐛";
-        pest.style.left = Math.random() * 80 + "%";
-        pest.style.top = Math.random() * 80 + "%";
+        pest.className = 'pest';
+        pest.innerText = Math.random() > 0.5 ? "🐛" : "🐦";
+        pest.style.left = (Math.random() * 80 + 10) + "%";
+        pest.style.top = (Math.random() * 60 + 20) + "%";
         document.body.appendChild(pest);
-        pest.onclick = () => { pest.remove(); };
-        setTimeout(() => { if(pest.parentNode){ userData.bal = Math.max(0, userData.bal - 5); updateUI(); pest.remove(); }}, 5000);
+
+        pest.onclick = () => {
+            pest.remove();
+            tg.HapticFeedback.impactOccurred('heavy');
+        };
+
+        setTimeout(() => {
+            if(pest.parentNode) {
+                u.bal = Math.max(0, u.bal - 5);
+                updateUI();
+                pest.remove();
+            }
+        }, 5000);
     }
 
-    function save() { db.ref('users/' + uid).set(userData); }
+    function openRank() {
+        document.getElementById('m-title').innerText = "REYTING";
+        db.ref('users').orderByChild('bal').limitToLast(10).once('value', s => {
+            let list = [];
+            s.forEach(c => { list.push(c.val()); });
+            list.reverse();
+            let h = list.map((x, i) => `<div class="item-row"><span>${i+1}. ${x.name}</span> <b>${Math.floor(x.bal)} RC</b></div>`).join('');
+            document.getElementById('m-body').innerHTML = h;
+            document.getElementById('modal-overlay').style.display = 'flex';
+        });
+    }
+
+    function save() { db.ref('users/' + uid).set(u); }
     function closeModal() { document.getElementById('modal-overlay').style.display = 'none'; }
-    function openRank() { tg.showAlert("Tez kunda..."); }
+    function goHome() { showMenu(); }
+    function invite() { tg.openTelegramLink("https://t.me/share/url?url=https://t.me/RPlay_game_bot"); }
 
     init();
 </script>
