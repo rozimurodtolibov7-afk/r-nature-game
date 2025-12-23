@@ -3,179 +3,169 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>R-Nature: Eco-Voyage</title>
+    <title>R-Nature: Forest Defender</title>
     <style>
-        :root { --green: #27ae60; --sky: #a5d6a7; --dark: #1b5e20; }
-        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-        body { margin: 0; overflow: hidden; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--sky); }
+        :root { --forest: #1b5e20; --fire: #ff3d00; --water: #29b6f6; }
+        body { margin: 0; overflow: hidden; background: #000; font-family: 'Arial', sans-serif; color: white; touch-action: none; }
+        
+        #game-canvas { display: block; background: linear-gradient(to bottom, #002171, #1b5e20); }
 
-        #game-container { position: relative; width: 100vw; height: 100vh; background: linear-gradient(to bottom, #81d4fa, #e1f5fe); overflow: hidden; }
+        #ui { position: fixed; top: 20px; width: 100%; display: flex; justify-content: space-around; pointer-events: none; z-index: 10; }
+        .stat-box { background: rgba(0,0,0,0.6); padding: 10px 20px; border-radius: 15px; border: 1px solid var(--water); font-weight: bold; }
 
-        /* HUD */
-        #hud { position: absolute; top: 20px; width: 100%; display: flex; justify-content: space-around; z-index: 100; pointer-events: none; }
-        .stat { background: rgba(255,255,255,0.8); padding: 10px 20px; border-radius: 15px; font-weight: bold; color: var(--dark); border: 2px solid var(--green); }
-
-        /* Entities */
-        #player { position: absolute; bottom: 80px; left: 50px; width: 50px; height: 50px; font-size: 40px; display: flex; align-items: center; justify-content: center; z-index: 50; transition: bottom 0.1s; }
-        .obstacle { position: absolute; bottom: 80px; width: 40px; height: 60px; font-size: 35px; z-index: 40; }
-        .item { position: absolute; width: 30px; height: 30px; font-size: 25px; z-index: 40; }
-
-        /* Ground */
-        #floor { position: absolute; bottom: 0; width: 100%; height: 80px; background: #795548; border-top: 8px solid var(--green); }
-
-        /* Screens */
-        .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.85); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 1000; color: white; text-align: center; }
-        button { padding: 15px 40px; font-size: 22px; border-radius: 50px; border: none; background: var(--green); color: white; cursor: pointer; font-weight: bold; box-shadow: 0 4px 15px rgba(0,0,0,0.3); transition: 0.3s; }
-        button:hover { transform: scale(1.05); background: #2ecc71; }
+        #overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.9); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 100; text-align: center; }
+        button { padding: 15px 40px; font-size: 20px; border: none; border-radius: 30px; background: var(--water); color: white; cursor: pointer; font-weight: bold; margin-top: 20px; text-transform: uppercase; }
+        
+        .fire-alert { position: fixed; bottom: 20px; width: 100%; text-align: center; color: var(--fire); font-weight: bold; animation: blink 0.5s infinite; display: none; }
+        @keyframes blink { 50% { opacity: 0; } }
     </style>
 </head>
 <body>
 
-<div id="game-container">
-    <div id="hud">
-        <div class="stat">SCORE: <span id="score">0</span></div>
-        <div class="stat">RC: <span id="rc">0</span></div>
-    </div>
-    
-    <div id="player">🏃</div>
-    <div id="floor"></div>
+<div id="ui">
+    <div class="stat-box">🌲 HEALTH: <span id="health">100</span>%</div>
+    <div class="stat-box">💎 RC: <span id="rc">0</span></div>
 </div>
 
-<div id="start-screen" class="overlay">
-    <h1 style="font-size: 48px; margin-bottom: 10px;">ECO-VOYAGE</h1>
-    <p style="margin-bottom: 30px; font-size: 18px;">Jump over dead trees and collect water drops!<br>(Press Space or Tap to Jump)</p>
-    <button onclick="initGame()">START MISSION</button>
+<div id="overlay">
+    <h1 style="font-size: 40px; color: #4caf50;">FOREST DEFENDER</h1>
+    <p>Tap to shoot water balls and extinguish falling fireballs!<br>Protect the nature!</p>
+    <button id="start-btn">Start Defense</button>
 </div>
 
-<div id="game-over" class="overlay" style="display: none;">
-    <h1 style="color: #ff5252;">MISSION FAILED</h1>
-    <p id="final-stats" style="font-size: 20px; margin-bottom: 20px;"></p>
-    <button onclick="location.reload()">TRY AGAIN</button>
-</div>
+<div class="fire-alert" id="alert">WARNING: FOREST ON FIRE!</div>
 
-<audio id="bg-music" loop src="https://www.chosic.com/wp-content/uploads/2021/07/Rainforest-Ambient.mp3"></audio>
+<canvas id="game-canvas"></canvas>
 
 <script>
-    let isJumping = false;
-    let score = 0;
-    let rcCount = 0;
+    const canvas = document.getElementById('game-canvas');
+    const ctx = canvas.getContext('2d');
+    const startBtn = document.getElementById('start-btn');
+    const overlay = document.getElementById('overlay');
+
     let gameActive = false;
-    let gravity = 0.9;
-    let velocity = 0;
-    let playerPos = 80;
+    let health = 100;
+    let rc = 0;
+    let fires = [];
+    let bullets = [];
+    let playerX = 0;
 
-    const player = document.getElementById('player');
-    const container = document.getElementById('game-container');
-    const music = document.getElementById('bg-music');
-
-    function initGame() {
-        document.getElementById('start-screen').style.display = 'none';
-        gameActive = true;
-        music.play();
-        requestAnimationFrame(gameLoop);
-        spawnObstacles();
-        spawnItems();
+    // Audio System (Synthesized Music - No external links needed)
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    function playBGM() {
+        const loop = () => {
+            if(!gameActive) return;
+            let osc = audioCtx.createOscillator();
+            let gain = audioCtx.createGain();
+            osc.connect(gain); gain.connect(audioCtx.destination);
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(110, audioCtx.currentTime);
+            gain.gain.setValueAtTime(0.05, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 2);
+            osc.start(); osc.stop(audioCtx.currentTime + 2);
+            setTimeout(loop, 2000);
+        };
+        loop();
     }
 
-    // Jump Logic
-    function jump() {
-        if (!isJumping && gameActive) {
-            isJumping = true;
-            velocity = 15;
-        }
+    function resize() {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        playerX = canvas.width / 2;
     }
+    window.addEventListener('resize', resize);
+    resize();
 
-    document.addEventListener('keydown', (e) => { if(e.code === 'Space') jump(); });
-    container.addEventListener('touchstart', jump);
-
-    function gameLoop() {
-        if (!gameActive) return;
-
-        // Physics
-        if (isJumping) {
-            velocity -= gravity;
-            playerPos += velocity;
-            if (playerPos <= 80) {
-                playerPos = 80;
-                isJumping = false;
-                velocity = 0;
-            }
-        }
-        player.style.bottom = playerPos + 'px';
-
-        // Score
-        score++;
-        document.getElementById('score').innerText = Math.floor(score/10);
+    function shoot(e) {
+        if(!gameActive) return;
+        const x = e.touches ? e.touches[0].clientX : e.clientX;
+        playerX = x;
+        bullets.push({ x: playerX, y: canvas.height - 50, speed: 7 });
         
-        requestAnimationFrame(gameLoop);
+        // Sound effect
+        let osc = audioCtx.createOscillator();
+        let gain = audioCtx.createGain();
+        osc.connect(gain); gain.connect(audioCtx.destination);
+        osc.frequency.value = 800;
+        osc.start();
+        gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.1);
+        osc.stop(audioCtx.currentTime + 0.1);
     }
 
-    function spawnObstacles() {
-        if (!gameActive) return;
-        const obstacle = document.createElement('div');
-        obstacle.className = 'obstacle';
-        obstacle.innerHTML = '🌵';
-        obstacle.style.right = '-50px';
-        container.appendChild(obstacle);
+    canvas.addEventListener('touchstart', (e) => { e.preventDefault(); shoot(e); });
+    canvas.addEventListener('mousedown', shoot);
 
-        let pos = -50;
-        const move = setInterval(() => {
-            if (!gameActive) { clearInterval(move); obstacle.remove(); return; }
-            pos += (6 + score/2000); 
-            obstacle.style.right = pos + 'px';
-
-            // Collision Detection
-            const pRect = player.getBoundingClientRect();
-            const oRect = obstacle.getBoundingClientRect();
-
-            if (pRect.left < oRect.right && pRect.right > oRect.left && pRect.top < oRect.bottom && pRect.bottom > oRect.top) {
-                endGame();
-            }
-
-            if (pos > window.innerWidth) {
-                clearInterval(move);
-                obstacle.remove();
-            }
-        }, 20);
-
-        setTimeout(spawnObstacles, Math.random() * 1500 + 1000);
+    function startGame() {
+        overlay.style.display = 'none';
+        gameActive = true;
+        health = 100;
+        rc = 0;
+        fires = [];
+        bullets = [];
+        playBGM();
+        update();
     }
 
-    function spawnItems() {
-        if (!gameActive) return;
-        const item = document.createElement('div');
-        item.className = 'item';
-        item.innerHTML = '💧';
-        item.style.right = '-50px';
-        item.style.bottom = (Math.random() * 150 + 120) + 'px';
-        container.appendChild(item);
+    function update() {
+        if(!gameActive) return;
 
-        let pos = -50;
-        const move = setInterval(() => {
-            if (!gameActive) { clearInterval(move); item.remove(); return; }
-            pos += 5;
-            item.style.right = pos + 'px';
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-            const pRect = player.getBoundingClientRect();
-            const iRect = item.getBoundingClientRect();
+        // Draw Player
+        ctx.font = '40px Arial';
+        ctx.fillText('🏹', playerX - 20, canvas.height - 20);
 
-            if (pRect.left < iRect.right && pRect.right > iRect.left && pRect.top < iRect.bottom && pRect.bottom > iRect.top) {
-                rcCount += 5;
-                document.getElementById('rc').innerText = rcCount;
-                item.remove();
-                clearInterval(move);
+        // Bullets
+        bullets.forEach((b, bi) => {
+            b.y -= b.speed;
+            ctx.fillStyle = '#29b6f6';
+            ctx.beginPath();
+            ctx.arc(b.x, b.y, 8, 0, Math.PI*2);
+            ctx.fill();
+            if(b.y < 0) bullets.splice(bi, 1);
+        });
+
+        // Fireballs
+        if(Math.random() < 0.03) {
+            fires.push({ x: Math.random() * canvas.width, y: -50, speed: 2 + (rc/500) });
+        }
+
+        fires.forEach((f, fi) => {
+            f.y += f.speed;
+            ctx.fillText('🔥', f.x - 15, f.y);
+
+            // Collision
+            bullets.forEach((b, bi) => {
+                let dist = Math.hypot(f.x - b.x, f.y - b.y);
+                if(dist < 30) {
+                    fires.splice(fi, 1);
+                    bullets.splice(bi, 1);
+                    rc += 5;
+                    document.getElementById('rc').innerText = rc;
+                }
+            });
+
+            if(f.y > canvas.height) {
+                fires.splice(fi, 1);
+                health -= 10;
+                document.getElementById('health').innerText = health;
+                if(health <= 0) gameOver();
             }
-        }, 20);
+        });
 
-        setTimeout(spawnItems, 2000);
+        requestAnimationFrame(update);
     }
 
-    function endGame() {
+    function gameOver() {
         gameActive = false;
-        music.pause();
-        document.getElementById('game-over').style.display = 'flex';
-        document.getElementById('final-stats').innerText = `Distance: ${Math.floor(score/10)}m | RC Collected: ${rcCount}`;
+        alert("FOREST DESTROYED! Mission Failed. RC: " + rc);
+        location.reload();
     }
+
+    startBtn.onclick = () => {
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        startGame();
+    };
 </script>
 </body>
 </html>
