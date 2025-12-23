@@ -3,159 +3,211 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>R-Rocket: Space Mission</title>
+    <title>R-Rocket: Deep Space</title>
     <style>
-        :root { --fire: #ff6d00; --fuel: #00e5ff; --space: #0b0b1a; }
-        body { margin: 0; overflow: hidden; background: var(--space); color: white; font-family: 'Courier New', monospace; touch-action: none; }
+        :root { --neon-blue: #00f3ff; --neon-red: #ff0055; --space: #050510; }
+        body { margin: 0; overflow: hidden; background: var(--space); color: white; font-family: 'Segoe UI', sans-serif; touch-action: none; }
         
         canvas { display: block; }
 
-        #hud { position: fixed; top: 20px; width: 100%; display: flex; justify-content: space-around; pointer-events: none; }
-        .bar-container { width: 150px; height: 20px; background: #333; border-radius: 10px; border: 2px solid #fff; overflow: hidden; }
-        #fuel-fill { width: 100%; height: 100%; background: var(--fuel); transition: width 0.2s; }
+        /* Interface */
+        #hud { position: fixed; top: 15px; width: 100%; display: flex; justify-content: space-around; z-index: 10; pointer-events: none; }
+        .stat-group { text-align: center; }
+        .fuel-container { width: 120px; height: 12px; background: #222; border: 1px solid var(--neon-blue); border-radius: 6px; margin-top: 5px; overflow: hidden; }
+        #fuel-level { width: 100%; height: 100%; background: var(--neon-blue); box-shadow: 0 0 10px var(--neon-blue); }
 
-        #ui-text { position: fixed; top: 50px; width: 100%; text-align: center; font-size: 20px; font-weight: bold; }
+        /* Controls */
+        #controls { position: fixed; bottom: 30px; width: 100%; display: flex; justify-content: space-between; padding: 0 40px; box-sizing: border-box; z-index: 20; }
+        .ctrl-btn { width: 80px; height: 80px; background: rgba(255,255,255,0.1); border: 2px solid var(--neon-blue); border-radius: 50%; color: var(--neon-blue); font-size: 30px; display: flex; align-items: center; justify-content: center; user-select: none; }
+        .ctrl-btn:active { background: var(--neon-blue); color: #000; }
 
-        .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.9); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 100; text-align: center; }
-        button { padding: 15px 40px; font-size: 20px; border: none; border-radius: 5px; background: var(--fuel); color: #000; cursor: pointer; font-weight: bold; margin-top: 20px; }
+        /* Overlay */
+        .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.95); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 100; text-align: center; }
+        h1 { color: var(--neon-blue); font-size: 40px; margin: 0; text-shadow: 0 0 15px var(--neon-blue); }
+        button { padding: 15px 50px; font-size: 20px; border: none; background: var(--neon-blue); color: #000; font-weight: bold; border-radius: 5px; cursor: pointer; margin-top: 30px; }
     </style>
 </head>
 <body>
 
 <div id="hud">
-    <div>FUEL <div class="bar-container"><div id="fuel-fill"></div></div></div>
-    <div>RC: <span id="rc">0</span></div>
-</div>
-<div id="ui-text">DISTANCE: <span id="dist">0</span>m</div>
-
-<div id="overlay">
-    <h1 style="color: var(--fuel); font-size: 40px;">R-ROCKET</h1>
-    <p>Collect ⭐ for fuel. Avoid 🪨 meteorites!<br>Move rocket by dragging your finger.</p>
-    <button id="start-btn">LAUNCH MISSION</button>
+    <div class="stat-group">FUEL <div class="fuel-container"><div id="fuel-level"></div></div></div>
+    <div class="stat-group">RC<br><b id="rc-val">0</b></div>
+    <div class="stat-group">DIST<br><b id="dist-val">0</b></div>
 </div>
 
-<canvas id="game"></canvas>
+<div id="controls">
+    <div class="ctrl-btn" id="btn-left">◀</div>
+    <div class="ctrl-btn" id="btn-right">▶</div>
+</div>
+
+<div id="overlay" class="overlay">
+    <h1>R-ROCKET</h1>
+    <p>COLLECT CRYSTALS FOR FUEL<br>AVOID VOLCANIC METEORITES</p>
+    <button onclick="startMission()">LAUNCH</button>
+</div>
+
+<canvas id="spaceCanvas"></canvas>
 
 <script>
-    const canvas = document.getElementById('game');
+    const canvas = document.getElementById('spaceCanvas');
     const ctx = canvas.getContext('2d');
-    const fuelFill = document.getElementById('fuel-fill');
-    
     let gameActive = false;
-    let fuel = 100;
-    let rc = 0;
-    let dist = 0;
-    let rocketX = 0;
+    let fuel = 100, rc = 0, dist = 0;
+    let playerX, playerY;
     let items = [];
+    let moveDir = 0;
 
+    // --- BUILT-IN MUSIC SYSTEM (Web Audio API) ---
     const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    function playSpaceSound(freq, type, dur) {
-        let osc = audioCtx.createOscillator();
-        let gain = audioCtx.createGain();
+    
+    function playBGM() {
+        if (!gameActive) return;
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(55, audioCtx.currentTime); // Deep space bass
+        osc.frequency.exponentialRampToValueAtTime(110, audioCtx.currentTime + 2);
+        gain.gain.setValueAtTime(0.02, audioCtx.currentTime);
+        gain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 2);
+        osc.connect(gain); gain.connect(audioCtx.destination);
+        osc.start(); osc.stop(audioCtx.currentTime + 2);
+        setTimeout(playBGM, 2000);
+    }
+
+    function playEffect(freq, type) {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
         osc.type = type;
         osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
         osc.connect(gain); gain.connect(audioCtx.destination);
         gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + dur);
-        osc.start(); osc.stop(audioCtx.currentTime + dur);
+        gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.3);
+        osc.start(); osc.stop(audioCtx.currentTime + 0.3);
     }
 
-    function resize() {
+    function init() {
         canvas.width = window.innerWidth;
         canvas.height = window.innerHeight;
-        rocketX = canvas.width / 2;
+        playerX = canvas.width / 2;
+        playerY = canvas.height - 150;
     }
-    window.addEventListener('resize', resize);
-    resize();
+    window.addEventListener('resize', init);
+    init();
 
-    // Touch movement
-    window.addEventListener('touchmove', (e) => {
-        if(!gameActive) return;
-        rocketX = e.touches[0].clientX;
-    });
-    window.addEventListener('mousemove', (e) => {
-        if(!gameActive) return;
-        rocketX = e.clientX;
-    });
+    // Controls
+    const btnL = document.getElementById('btn-left');
+    const btnR = document.getElementById('btn-right');
+    const setDir = (d) => moveDir = d;
+    btnL.ontouchstart = () => setDir(-1);
+    btnL.ontouchend = () => setDir(0);
+    btnR.ontouchstart = () => setDir(1);
+    btnR.ontouchend = () => setDir(0);
+    // Mouse Support
+    btnL.onmousedown = () => setDir(-1);
+    btnL.onmouseup = () => setDir(0);
+    btnR.onmousedown = () => setDir(1);
+    btnR.onmouseup = () => setDir(0);
 
-    function spawnItem() {
-        if(!gameActive) return;
-        const isMeteor = Math.random() < 0.4;
+    function startMission() {
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        document.getElementById('overlay').style.display = 'none';
+        gameActive = true;
+        playBGM();
+        spawn();
+        update();
+    }
+
+    function spawn() {
+        if (!gameActive) return;
+        const isMeteor = Math.random() < 0.5;
         items.push({
-            x: Math.random() * canvas.width,
+            x: Math.random() * (canvas.width - 40) + 20,
             y: -50,
-            type: isMeteor ? '🪨' : '⭐',
-            speed: 3 + Math.random() * 4
+            type: isMeteor ? 'meteor' : 'fuel',
+            speed: 3 + Math.random() * 3,
+            rot: Math.random() * Math.PI
         });
-        setTimeout(spawnItem, 600 - (dist/50));
+        setTimeout(spawn, Math.max(300, 800 - dist/20));
     }
 
-    function loop() {
-        if(!gameActive) return;
+    function drawRocket(x, y) {
+        ctx.font = '50px Arial';
+        ctx.textAlign = 'center';
+        ctx.fillText('🚀', x, y);
+    }
 
-        ctx.fillStyle = '#0b0b1a';
+    function drawMeteor(x, y, rot) {
+        ctx.save();
+        ctx.translate(x, y);
+        ctx.rotate(rot);
+        ctx.fillStyle = '#554433';
+        ctx.beginPath();
+        // Irregular rock shape
+        ctx.moveTo(-20, -10); ctx.lineTo(10, -25); ctx.lineTo(25, 0);
+        ctx.lineTo(15, 20); ctx.lineTo(-15, 25); ctx.lineTo(-25, 5);
+        ctx.closePath();
+        ctx.fill();
+        // Lava veins
+        ctx.strokeStyle = '#ff4400';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+        ctx.restore();
+    }
+
+    function update() {
+        if (!gameActive) return;
+        ctx.fillStyle = '#050510';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-        // Stars Background
-        ctx.fillStyle = '#fff';
-        for(let i=0; i<10; i++) ctx.fillRect(Math.random()*canvas.width, Math.random()*canvas.height, 2, 2);
+        // Movement
+        playerX += moveDir * 7;
+        playerX = Math.max(30, Math.min(canvas.width - 30, playerX));
 
-        // Rocket
-        ctx.font = '50px Arial';
-        ctx.fillText('🚀', rocketX - 25, canvas.height - 80);
+        drawRocket(playerX, playerY);
 
-        // Items logic
         items.forEach((item, i) => {
             item.y += item.speed;
-            ctx.font = '30px Arial';
-            ctx.fillText(item.type, item.x - 15, item.y);
+            item.rot += 0.05;
+
+            if (item.type === 'meteor') {
+                drawMeteor(item.x, item.y, item.rot);
+            } else {
+                ctx.font = '30px Arial';
+                ctx.fillText('💎', item.x, item.y);
+            }
 
             // Collision
-            let dx = item.x - rocketX;
-            let dy = item.y - (canvas.height - 80);
-            if(Math.hypot(dx, dy) < 40) {
-                if(item.type === '⭐') {
-                    fuel = Math.min(100, fuel + 15);
+            let dx = item.x - playerX;
+            let dy = item.y - (playerY - 20);
+            if (Math.hypot(dx, dy) < 45) {
+                if (item.type === 'fuel') {
+                    fuel = Math.min(100, fuel + 20);
                     rc += 10;
-                    playSpaceSound(600, 'sine', 0.1);
+                    playEffect(880, 'sine');
                 } else {
-                    fuel -= 25;
-                    playSpaceSound(100, 'sawtooth', 0.3);
+                    fuel -= 30;
+                    playEffect(100, 'square');
                 }
                 items.splice(i, 1);
             }
 
-            if(item.y > canvas.height) items.splice(i, 1);
+            if (item.y > canvas.height) items.splice(i, i);
         });
 
-        // Stats update
-        fuel -= 0.15; // Natural consumption
-        dist += 1;
-        fuelFill.style.width = fuel + '%';
-        document.getElementById('rc').innerText = rc;
-        document.getElementById('dist').innerText = Math.floor(dist/10);
+        fuel -= 0.12;
+        dist += 0.5;
+        
+        document.getElementById('fuel-level').style.width = fuel + '%';
+        document.getElementById('rc-val').innerText = rc;
+        document.getElementById('dist-val').innerText = Math.floor(dist);
 
-        if(fuel <= 0) gameOver();
-
-        requestAnimationFrame(loop);
+        if (fuel <= 0) {
+            gameActive = false;
+            alert(`GAME OVER\nDistance: ${Math.floor(dist)}m\nRC: ${rc}`);
+            location.reload();
+        }
+        requestAnimationFrame(update);
     }
-
-    function gameOver() {
-        gameActive = false;
-        playSpaceSound(50, 'square', 1);
-        alert(`MISSION ABORTED! \nDistance: ${Math.floor(dist/10)}m \nRC Collected: ${rc}`);
-        location.reload();
-    }
-
-    document.getElementById('start-btn').onclick = () => {
-        if (audioCtx.state === 'suspended') audioCtx.resume();
-        document.getElementById('overlay').style.display = 'none';
-        gameActive = true;
-        spawnItem();
-        loop();
-        // Background Space Hum
-        setInterval(() => { if(gameActive) playSpaceSound(80, 'sine', 2); }, 2000);
-    };
 </script>
 </body>
 </html>
