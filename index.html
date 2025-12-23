@@ -1,123 +1,180 @@
 <!DOCTYPE html>
-<html lang="uz">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>R-Nature: Eko-Sayohat</title>
+    <title>R-Nature: Eco-Voyage</title>
     <style>
-        :root { --grass: #2ecc71; --dirt: #795548; --sky: #87CEEB; }
+        :root { --green: #27ae60; --sky: #a5d6a7; --dark: #1b5e20; }
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-        body { margin: 0; overflow: hidden; font-family: sans-serif; background: var(--sky); }
+        body { margin: 0; overflow: hidden; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--sky); }
 
-        /* Dunyo va Harakat */
-        #game-world { position: relative; width: 100vw; height: 100vh; overflow: hidden; }
-        #ground { position: absolute; bottom: 0; width: 200%; height: 100px; background: var(--dirt); border-top: 10px solid var(--grass); display: flex; animation: moveGround 5s linear infinite; }
-        @keyframes moveGround { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+        #game-container { position: relative; width: 100vw; height: 100vh; background: linear-gradient(to bottom, #81d4fa, #e1f5fe); overflow: hidden; }
 
-        /* Qahramon */
-        #player { position: absolute; bottom: 100px; left: 50px; font-size: 50px; z-index: 10; transition: 0.3s; }
+        /* HUD */
+        #hud { position: absolute; top: 20px; width: 100%; display: flex; justify-content: space-around; z-index: 100; pointer-events: none; }
+        .stat { background: rgba(255,255,255,0.8); padding: 10px 20px; border-radius: 15px; font-weight: bold; color: var(--dark); border: 2px solid var(--green); }
 
-        /* O'simliklar */
-        .plant { position: absolute; bottom: 100px; font-size: 40px; cursor: pointer; transition: 0.5s; z-index: 5; }
-        .dry { filter: grayscale(100%) sepia(50%); transform: scale(0.8); }
-        .bloomed { filter: grayscale(0%); transform: scale(1.2); }
+        /* Entities */
+        #player { position: absolute; bottom: 80px; left: 50px; width: 50px; height: 50px; font-size: 40px; display: flex; align-items: center; justify-content: center; z-index: 50; transition: bottom 0.1s; }
+        .obstacle { position: absolute; bottom: 80px; width: 40px; height: 60px; font-size: 35px; z-index: 40; }
+        .item { position: absolute; width: 30px; height: 30px; font-size: 25px; z-index: 40; }
 
-        /* UI */
-        #ui { position: fixed; top: 20px; width: 100%; text-align: center; z-index: 100; pointer-events: none; }
-        .score-box { background: rgba(0,0,0,0.5); color: white; padding: 10px 20px; border-radius: 20px; font-size: 20px; font-weight: bold; border: 2px solid #fff; }
-        
-        #start-screen { position: fixed; inset: 0; background: rgba(0,0,0,0.8); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 1000; color: white; }
-        button { padding: 15px 40px; font-size: 20px; border-radius: 30px; border: none; background: var(--grass); color: white; cursor: pointer; font-weight: bold; }
+        /* Ground */
+        #floor { position: absolute; bottom: 0; width: 100%; height: 80px; background: #795548; border-top: 8px solid var(--green); }
+
+        /* Screens */
+        .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.85); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 1000; color: white; text-align: center; }
+        button { padding: 15px 40px; font-size: 22px; border-radius: 50px; border: none; background: var(--green); color: white; cursor: pointer; font-weight: bold; box-shadow: 0 4px 15px rgba(0,0,0,0.3); transition: 0.3s; }
+        button:hover { transform: scale(1.05); background: #2ecc71; }
     </style>
 </head>
 <body>
 
-<div id="start-screen">
-    <h1>R-Nature</h1>
-    <p>O'simliklarni sug'orib dunyoni qutqaring!</p>
-    <button onclick="startGame()">O'yinni boshlash 🌿</button>
-</div>
-
-<div id="ui">
-    <span class="score-box">💰 <span id="rc-score">0</span> RC</span>
-</div>
-
-<div id="game-world">
+<div id="game-container">
+    <div id="hud">
+        <div class="stat">SCORE: <span id="score">0</span></div>
+        <div class="stat">RC: <span id="rc">0</span></div>
+    </div>
+    
     <div id="player">🏃</div>
-    <div id="ground"></div>
+    <div id="floor"></div>
 </div>
 
-<audio id="nature-music" loop src="https://www.chosic.com/wp-content/uploads/2021/04/Fairy-Tale-Tree-of-Life.mp3"></audio>
+<div id="start-screen" class="overlay">
+    <h1 style="font-size: 48px; margin-bottom: 10px;">ECO-VOYAGE</h1>
+    <p style="margin-bottom: 30px; font-size: 18px;">Jump over dead trees and collect water drops!<br>(Press Space or Tap to Jump)</p>
+    <button onclick="initGame()">START MISSION</button>
+</div>
+
+<div id="game-over" class="overlay" style="display: none;">
+    <h1 style="color: #ff5252;">MISSION FAILED</h1>
+    <p id="final-stats" style="font-size: 20px; margin-bottom: 20px;"></p>
+    <button onclick="location.reload()">TRY AGAIN</button>
+</div>
+
+<audio id="bg-music" loop src="https://www.chosic.com/wp-content/uploads/2021/07/Rainforest-Ambient.mp3"></audio>
 
 <script>
-    let rc = 0;
+    let isJumping = false;
+    let score = 0;
+    let rcCount = 0;
     let gameActive = false;
-    const player = document.getElementById('player');
-    const world = document.getElementById('game-world');
-    const music = document.getElementById('nature-music');
+    let gravity = 0.9;
+    let velocity = 0;
+    let playerPos = 80;
 
-    function startGame() {
+    const player = document.getElementById('player');
+    const container = document.getElementById('game-container');
+    const music = document.getElementById('bg-music');
+
+    function initGame() {
         document.getElementById('start-screen').style.display = 'none';
         gameActive = true;
         music.play();
-        spawnPlant();
+        requestAnimationFrame(gameLoop);
+        spawnObstacles();
+        spawnItems();
     }
 
-    function spawnPlant() {
-        if(!gameActive) return;
+    // Jump Logic
+    function jump() {
+        if (!isJumping && gameActive) {
+            isJumping = true;
+            velocity = 15;
+        }
+    }
+
+    document.addEventListener('keydown', (e) => { if(e.code === 'Space') jump(); });
+    container.addEventListener('touchstart', jump);
+
+    function gameLoop() {
+        if (!gameActive) return;
+
+        // Physics
+        if (isJumping) {
+            velocity -= gravity;
+            playerPos += velocity;
+            if (playerPos <= 80) {
+                playerPos = 80;
+                isJumping = false;
+                velocity = 0;
+            }
+        }
+        player.style.bottom = playerPos + 'px';
+
+        // Score
+        score++;
+        document.getElementById('score').innerText = Math.floor(score/10);
         
-        const plant = document.createElement('div');
-        plant.className = 'plant dry';
-        plant.innerHTML = '🌵'; // Qurigan holati
-        plant.style.right = '-100px';
-        world.appendChild(plant);
+        requestAnimationFrame(gameLoop);
+    }
 
-        let pos = -100;
-        const moveInterval = setInterval(() => {
-            if(!gameActive) { clearInterval(moveInterval); return; }
-            pos += 5;
-            plant.style.right = pos + 'px';
+    function spawnObstacles() {
+        if (!gameActive) return;
+        const obstacle = document.createElement('div');
+        obstacle.className = 'obstacle';
+        obstacle.innerHTML = '🌵';
+        obstacle.style.right = '-50px';
+        container.appendChild(obstacle);
 
-            // Agar o'simlik sug'orilmay o'tib ketsa
-            if(pos > window.innerWidth) {
-                if(plant.classList.contains('dry')) {
-                    gameOver();
-                }
-                plant.remove();
-                clearInterval(moveInterval);
+        let pos = -50;
+        const move = setInterval(() => {
+            if (!gameActive) { clearInterval(move); obstacle.remove(); return; }
+            pos += (6 + score/2000); 
+            obstacle.style.right = pos + 'px';
+
+            // Collision Detection
+            const pRect = player.getBoundingClientRect();
+            const oRect = obstacle.getBoundingClientRect();
+
+            if (pRect.left < oRect.right && pRect.right > oRect.left && pRect.top < oRect.bottom && pRect.bottom > oRect.top) {
+                endGame();
+            }
+
+            if (pos > window.innerWidth) {
+                clearInterval(move);
+                obstacle.remove();
             }
         }, 20);
 
-        plant.onclick = () => {
-            if(plant.classList.contains('dry')) {
-                plant.classList.remove('dry');
-                plant.classList.add('bloomed');
-                plant.innerHTML = '🌸'; // Sug'orilgan holati
-                rc += 10;
-                document.getElementById('rc-score').innerText = rc;
-                playWaterSound();
+        setTimeout(spawnObstacles, Math.random() * 1500 + 1000);
+    }
+
+    function spawnItems() {
+        if (!gameActive) return;
+        const item = document.createElement('div');
+        item.className = 'item';
+        item.innerHTML = '💧';
+        item.style.right = '-50px';
+        item.style.bottom = (Math.random() * 150 + 120) + 'px';
+        container.appendChild(item);
+
+        let pos = -50;
+        const move = setInterval(() => {
+            if (!gameActive) { clearInterval(move); item.remove(); return; }
+            pos += 5;
+            item.style.right = pos + 'px';
+
+            const pRect = player.getBoundingClientRect();
+            const iRect = item.getBoundingClientRect();
+
+            if (pRect.left < iRect.right && pRect.right > iRect.left && pRect.top < iRect.bottom && pRect.bottom > iRect.top) {
+                rcCount += 5;
+                document.getElementById('rc').innerText = rcCount;
+                item.remove();
+                clearInterval(move);
             }
-        };
+        }, 20);
 
-        setTimeout(spawnPlant, Math.random() * 2000 + 1500);
+        setTimeout(spawnItems, 2000);
     }
 
-    function playWaterSound() {
-        const ctx = new (window.AudioContext || window.webkitAudioContext)();
-        const osc = ctx.createOscillator();
-        const gain = ctx.createGain();
-        osc.connect(gain); gain.connect(ctx.destination);
-        osc.frequency.value = 1000;
-        osc.start();
-        gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.1);
-        osc.stop(ctx.currentTime + 0.1);
-    }
-
-    function gameOver() {
+    function endGame() {
         gameActive = false;
         music.pause();
-        alert("O'simlik sug'orilmadi! Yo'l qurib qoldi. Jami RC: " + rc);
-        location.reload();
+        document.getElementById('game-over').style.display = 'flex';
+        document.getElementById('final-stats').innerText = `Distance: ${Math.floor(score/10)}m | RC Collected: ${rcCount}`;
     }
 </script>
 </body>
