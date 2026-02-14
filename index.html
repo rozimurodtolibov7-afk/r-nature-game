@@ -1,121 +1,1185 @@
 <!DOCTYPE html>
 <html lang="uz">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>R-Nature: Mandala Soul</title>
-    <style>
-        body { margin: 0; background: #000; overflow: hidden; font-family: 'Courier New', monospace; touch-action: none; }
-        #overlay { position: absolute; top: 20px; width: 100%; text-align: center; color: rgba(255,255,255,0.4); pointer-events: none; }
-        #controls { position: absolute; bottom: 30px; width: 100%; display: flex; justify-content: center; gap: 20px; }
-        .btn { padding: 10px 20px; border: 1px solid rgba(255,255,255,0.2); color: #fff; cursor: pointer; border-radius: 20px; font-size: 12px; transition: 0.3s; }
-        .btn:hover { background: rgba(255,255,255,0.1); border-color: #fff; }
-        canvas { display: block; filter: contrast(120%) brightness(110%); }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>X va 0 O'yini</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Exo+2:wght@300;400;600;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0f;
+    --surface: #12121a;
+    --surface2: #1a1a28;
+    --border: #2a2a45;
+    --accent: #00f5ff;
+    --accent2: #ff0066;
+    --accent3: #7c3aed;
+    --text: #e0e0ff;
+    --text-dim: #6060a0;
+    --x-color: #00f5ff;
+    --o-color: #ff0066;
+    --win-glow: #00ff88;
+    --grid-line: #1e1e35;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Exo 2', sans-serif;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+  }
+
+  /* Animated background */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background:
+      radial-gradient(ellipse at 20% 20%, rgba(0,245,255,0.05) 0%, transparent 50%),
+      radial-gradient(ellipse at 80% 80%, rgba(255,0,102,0.05) 0%, transparent 50%),
+      radial-gradient(ellipse at 50% 50%, rgba(124,58,237,0.03) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  .grid-bg {
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(var(--grid-line) 1px, transparent 1px),
+      linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+    background-size: 40px 40px;
+    opacity: 0.4;
+    pointer-events: none;
+  }
+
+  /* SCREENS */
+  .screen {
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    max-width: 600px;
+    padding: 20px;
+    animation: fadeIn 0.4s ease;
+  }
+  .screen.active { display: flex; }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* LOGO */
+  .logo {
+    font-family: 'Orbitron', monospace;
+    font-size: 3rem;
+    font-weight: 900;
+    letter-spacing: 4px;
+    margin-bottom: 8px;
+    position: relative;
+  }
+  .logo .x { color: var(--x-color); text-shadow: 0 0 20px var(--x-color); }
+  .logo .sep { color: var(--text-dim); }
+  .logo .o { color: var(--o-color); text-shadow: 0 0 20px var(--o-color); }
+
+  .tagline {
+    font-size: 0.75rem;
+    letter-spacing: 6px;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    margin-bottom: 50px;
+  }
+
+  /* LANGUAGE SELECT */
+  .lang-title {
+    font-family: 'Orbitron', monospace;
+    font-size: 0.7rem;
+    letter-spacing: 5px;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    margin-bottom: 20px;
+  }
+
+  .lang-grid {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 50px;
+  }
+
+  .lang-btn {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 16px 32px;
+    font-family: 'Orbitron', monospace;
+    font-size: 1rem;
+    font-weight: 700;
+    letter-spacing: 2px;
+    cursor: pointer;
+    transition: all 0.2s;
+    position: relative;
+    overflow: hidden;
+    clip-path: polygon(8px 0%, 100% 0%, calc(100% - 8px) 100%, 0% 100%);
+  }
+  .lang-btn::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, var(--accent), var(--accent3));
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+  .lang-btn:hover::before, .lang-btn.selected::before { opacity: 0.15; }
+  .lang-btn:hover, .lang-btn.selected {
+    border-color: var(--accent);
+    color: var(--accent);
+    box-shadow: 0 0 20px rgba(0,245,255,0.2), inset 0 0 20px rgba(0,245,255,0.05);
+    transform: translateY(-2px);
+  }
+  .lang-btn .flag { display: block; font-size: 1.5rem; margin-bottom: 4px; }
+
+  /* MODE SELECT */
+  .mode-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    width: 100%;
+    max-width: 380px;
+    margin-bottom: 30px;
+  }
+
+  .mode-btn {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 20px 28px;
+    font-family: 'Exo 2', sans-serif;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    text-align: left;
+    clip-path: polygon(12px 0%, 100% 0%, calc(100% - 12px) 100%, 0% 100%);
+  }
+  .mode-btn:hover {
+    border-color: var(--accent);
+    background: rgba(0,245,255,0.05);
+    transform: translateX(4px);
+    box-shadow: 0 0 25px rgba(0,245,255,0.15);
+  }
+  .mode-btn .icon { font-size: 2rem; }
+  .mode-btn .desc { font-size: 0.75rem; color: var(--text-dim); font-weight: 300; margin-top: 2px; }
+
+  /* SIZE SELECT */
+  .size-grid {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 30px;
+  }
+  .size-btn {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 16px 36px;
+    font-family: 'Orbitron', monospace;
+    font-size: 1.1rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+    clip-path: polygon(10px 0%, 100% 0%, calc(100% - 10px) 100%, 0% 100%);
+  }
+  .size-btn:hover {
+    border-color: var(--accent2);
+    color: var(--accent2);
+    box-shadow: 0 0 20px rgba(255,0,102,0.2);
+    transform: translateY(-2px);
+  }
+
+  /* BACK BUTTON */
+  .back-btn {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text-dim);
+    padding: 10px 24px;
+    font-family: 'Exo 2', sans-serif;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    letter-spacing: 2px;
+  }
+  .back-btn:hover { border-color: var(--text-dim); color: var(--text); }
+
+  /* SECTION TITLE */
+  .section-title {
+    font-family: 'Orbitron', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 5px;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    margin-bottom: 20px;
+    margin-top: 10px;
+  }
+
+  /* ===== GAME SCREEN ===== */
+  #gameScreen { padding: 16px; }
+
+  .game-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    max-width: 560px;
+    margin-bottom: 20px;
+  }
+
+  .game-title {
+    font-family: 'Orbitron', monospace;
+    font-size: 1rem;
+    font-weight: 700;
+    letter-spacing: 3px;
+    color: var(--text-dim);
+  }
+
+  .score-board {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+
+  .score-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 8px 16px;
+    text-align: center;
+    clip-path: polygon(6px 0%, 100% 0%, calc(100% - 6px) 100%, 0% 100%);
+    min-width: 70px;
+  }
+  .score-card.x-card { border-color: rgba(0,245,255,0.3); }
+  .score-card.o-card { border-color: rgba(255,0,102,0.3); }
+  .score-card .label {
+    font-size: 0.6rem;
+    letter-spacing: 3px;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    display: block;
+  }
+  .score-card .val {
+    font-family: 'Orbitron', monospace;
+    font-size: 1.5rem;
+    font-weight: 900;
+  }
+  .score-card.x-card .val { color: var(--x-color); }
+  .score-card.o-card .val { color: var(--o-color); }
+  .score-sep { color: var(--text-dim); font-family: 'Orbitron', monospace; font-size: 1.2rem; }
+
+  /* TURN INDICATOR */
+  .turn-indicator {
+    width: 100%;
+    max-width: 560px;
+    text-align: center;
+    padding: 10px;
+    margin-bottom: 16px;
+    font-family: 'Orbitron', monospace;
+    font-size: 0.8rem;
+    letter-spacing: 3px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    transition: all 0.3s;
+  }
+  .turn-indicator.x-turn { border-color: rgba(0,245,255,0.4); color: var(--x-color); }
+  .turn-indicator.o-turn { border-color: rgba(255,0,102,0.4); color: var(--o-color); }
+
+  /* BOARD */
+  .board-wrapper {
+    position: relative;
+    margin-bottom: 20px;
+  }
+
+  .board {
+    display: grid;
+    gap: 4px;
+    background: var(--border);
+    border: 1px solid var(--border);
+    padding: 4px;
+  }
+  .board.size3 { grid-template-columns: repeat(3, 1fr); }
+  .board.size5 { grid-template-columns: repeat(5, 1fr); }
+
+  .cell {
+    background: var(--surface);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.15s;
+    position: relative;
+    overflow: hidden;
+    aspect-ratio: 1;
+  }
+  .board.size3 .cell { width: 110px; height: 110px; font-size: 3.5rem; }
+  .board.size5 .cell { width: 76px; height: 76px; font-size: 2.2rem; }
+
+  .cell:hover:not(.taken) {
+    background: rgba(255,255,255,0.04);
+  }
+  .cell.taken { cursor: not-allowed; }
+
+  .cell .mark {
+    font-family: 'Orbitron', monospace;
+    font-weight: 900;
+    animation: markAppear 0.2s cubic-bezier(0.34,1.56,0.64,1);
+    position: relative;
+    z-index: 1;
+  }
+  @keyframes markAppear {
+    from { transform: scale(0) rotate(-10deg); opacity: 0; }
+    to { transform: scale(1) rotate(0deg); opacity: 1; }
+  }
+  .cell .mark.x { color: var(--x-color); text-shadow: 0 0 15px var(--x-color); }
+  .cell .mark.o { color: var(--o-color); text-shadow: 0 0 15px var(--o-color); }
+
+  .cell.winning {
+    background: rgba(0,255,136,0.08) !important;
+    animation: winPulse 0.6s ease infinite alternate;
+  }
+  @keyframes winPulse {
+    from { background: rgba(0,255,136,0.08); }
+    to { background: rgba(0,255,136,0.18); }
+  }
+  .cell.winning .mark { text-shadow: 0 0 20px var(--win-glow) !important; }
+
+  /* GAME OVER OVERLAY */
+  .result-overlay {
+    display: none;
+    position: absolute;
+    inset: 0;
+    background: rgba(10,10,15,0.92);
+    backdrop-filter: blur(4px);
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 16px;
+    animation: fadeIn 0.3s ease;
+    z-index: 10;
+  }
+  .result-overlay.show { display: flex; }
+
+  .result-text {
+    font-family: 'Orbitron', monospace;
+    font-size: 1.8rem;
+    font-weight: 900;
+    letter-spacing: 4px;
+    text-align: center;
+  }
+  .result-text.x-win { color: var(--x-color); text-shadow: 0 0 30px var(--x-color); }
+  .result-text.o-win { color: var(--o-color); text-shadow: 0 0 30px var(--o-color); }
+  .result-text.draw { color: var(--text-dim); }
+
+  .result-sub {
+    font-size: 0.75rem;
+    letter-spacing: 4px;
+    color: var(--text-dim);
+    text-transform: uppercase;
+  }
+
+  /* ACTION BUTTONS */
+  .game-actions {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .action-btn {
+    padding: 12px 28px;
+    font-family: 'Exo 2', sans-serif;
+    font-size: 0.85rem;
+    font-weight: 600;
+    letter-spacing: 2px;
+    cursor: pointer;
+    transition: all 0.2s;
+    border: 1px solid;
+    text-transform: uppercase;
+    clip-path: polygon(8px 0%, 100% 0%, calc(100% - 8px) 100%, 0% 100%);
+  }
+  .action-btn.primary {
+    background: rgba(0,245,255,0.1);
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+  .action-btn.primary:hover {
+    background: rgba(0,245,255,0.2);
+    box-shadow: 0 0 20px rgba(0,245,255,0.3);
+  }
+  .action-btn.secondary {
+    background: transparent;
+    border-color: var(--border);
+    color: var(--text-dim);
+  }
+  .action-btn.secondary:hover {
+    border-color: var(--text-dim);
+    color: var(--text);
+  }
+
+  /* Thinking indicator */
+  .thinking {
+    display: none;
+    align-items: center;
+    gap: 8px;
+    color: var(--text-dim);
+    font-size: 0.8rem;
+    letter-spacing: 3px;
+    margin-top: 8px;
+  }
+  .thinking.show { display: flex; }
+  .thinking-dots span {
+    animation: blink 1.2s infinite;
+    display: inline-block;
+  }
+  .thinking-dots span:nth-child(2) { animation-delay: 0.2s; }
+  .thinking-dots span:nth-child(3) { animation-delay: 0.4s; }
+  @keyframes blink {
+    0%, 80%, 100% { opacity: 0.2; }
+    40% { opacity: 1; }
+  }
+
+  /* Responsive */
+  @media (max-width: 520px) {
+    .logo { font-size: 2rem; }
+    .board.size3 .cell { width: 90px; height: 90px; font-size: 2.8rem; }
+    .board.size5 .cell { width: 58px; height: 58px; font-size: 1.6rem; }
+    .lang-btn { padding: 12px 20px; font-size: 0.9rem; }
+  }
+</style>
 </head>
 <body>
+<div class="grid-bg"></div>
 
-<div id="overlay">
-    <div style="font-size: 18px; letter-spacing: 5px;">SOUL MANDALA</div>
-    <div id="info">Symmetry: 8 | Harmony: Active</div>
+<!-- AUDIO CONTROLS -->
+<div id="audioControls" style="position:fixed;top:16px;right:16px;display:flex;gap:8px;z-index:999;">
+  <button id="soundBtn" onclick="toggleSound()" title="Sound" style="background:rgba(18,18,26,0.9);border:1px solid #2a2a45;color:#e0e0ff;width:40px;height:40px;font-size:1.1rem;cursor:pointer;border-radius:4px;transition:all 0.2s;">??</button>
+  <button id="musicBtn" onclick="toggleMusic()" title="Music" style="background:rgba(18,18,26,0.9);border:1px solid #2a2a45;color:#e0e0ff;width:40px;height:40px;font-size:1.1rem;cursor:pointer;border-radius:4px;transition:all 0.2s;">??</button>
 </div>
 
-<div id="controls">
-    <div class="btn" onclick="clearCanvas()">TOZALASH</div>
-    <div class="btn" onclick="saveArt()">SAQLASH</div>
+<!-- ===== LANGUAGE SCREEN ===== -->
+<div class="screen active" id="langScreen">
+  <div class="logo"><span class="x">X</span><span class="sep"> vs </span><span class="o">O</span></div>
+  <div class="tagline" id="tagline">Choose your language</div>
+
+  <div class="lang-title" id="langTitle">Select Language / Tilni tanlang / Âûáåðèòå ÿçûê</div>
+  <div class="lang-grid">
+    <button class="lang-btn" onclick="selectLang('uz')">
+      <span class="flag">????</span>UZ
+    </button>
+    <button class="lang-btn" onclick="selectLang('ru')">
+      <span class="flag">????</span>RU
+    </button>
+    <button class="lang-btn" onclick="selectLang('en')">
+      <span class="flag">????</span>EN
+    </button>
+  </div>
 </div>
 
-<canvas id="mandala"></canvas>
+<!-- ===== MODE SCREEN ===== -->
+<div class="screen" id="modeScreen">
+  <div class="logo"><span class="x">X</span><span class="sep"> vs </span><span class="o">O</span></div>
+  <div class="section-title" id="modeTitle">Game Mode</div>
+
+  <div class="mode-grid">
+    <button class="mode-btn" onclick="selectMode('pvp')">
+      <span class="icon">??</span>
+      <div>
+        <div id="pvpLabel">2 Players</div>
+        <div class="desc" id="pvpDesc">Play against your friend</div>
+      </div>
+    </button>
+    <button class="mode-btn" onclick="selectMode('pve')">
+      <span class="icon">??</span>
+      <div>
+        <div id="pveLabel">vs Computer</div>
+        <div class="desc" id="pveDesc">Challenge the AI</div>
+      </div>
+    </button>
+  </div>
+
+  <button class="back-btn" onclick="resumeAudio(); sfxBack(); showScreen('langScreen')" id="backBtn1">< Back</button>
+</div>
+
+<!-- ===== SIZE SCREEN ===== -->
+<div class="screen" id="sizeScreen">
+  <div class="logo"><span class="x">X</span><span class="sep"> vs </span><span class="o">O</span></div>
+  <div class="section-title" id="sizeTitle">Board Size</div>
+
+  <div class="size-grid">
+    <button class="size-btn" onclick="startGame(3)">3 ? 3</button>
+    <button class="size-btn" onclick="startGame(5)">5 ? 5</button>
+  </div>
+
+  <button class="back-btn" onclick="resumeAudio(); sfxBack(); showScreen('modeScreen')" id="backBtn2">< Back</button>
+</div>
+
+<!-- ===== GAME SCREEN ===== -->
+<div class="screen" id="gameScreen">
+  <div class="game-header">
+    <div class="game-title" id="gameTitle">X vs O</div>
+    <div class="score-board">
+      <div class="score-card x-card">
+        <span class="label" id="playerXLabel">PLAYER X</span>
+        <span class="val" id="scoreX">0</span>
+      </div>
+      <div class="score-sep">—</div>
+      <div class="score-card o-card">
+        <span class="label" id="playerOLabel">PLAYER O</span>
+        <span class="val" id="scoreO">0</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="turn-indicator x-turn" id="turnIndicator">PLAYER X</div>
+
+  <div class="board-wrapper">
+    <div class="board" id="board"></div>
+    <div class="result-overlay" id="resultOverlay">
+      <div class="result-text" id="resultText">X WINS!</div>
+      <div class="result-sub" id="resultSub">Congratulations</div>
+      <button class="action-btn primary" onclick="restartGame()" id="playAgainBtn">Play Again</button>
+    </div>
+  </div>
+
+  <div class="thinking" id="thinking">
+    <span id="thinkingText">AI thinking</span>
+    <div class="thinking-dots"><span>?</span><span>?</span><span>?</span></div>
+  </div>
+
+  <div class="game-actions">
+    <button class="action-btn primary" onclick="restartGame()" id="restartBtn">? Restart</button>
+    <button class="action-btn secondary" onclick="resumeAudio(); sfxBack(); showScreen('modeScreen')" id="menuBtn">? Menu</button>
+  </div>
+</div>
 
 <script>
-const canvas = document.getElementById('mandala');
-const ctx = canvas.getContext('2d');
-let drawing = false;
-let segments = 8;
-let hue = 150;
+// ===== TRANSLATIONS =====
+const T = {
+  uz: {
+    tagline: "O'YIN TANLANG",
+    modeTitle: "O'YIN REJIMI",
+    pvpLabel: "2 O'yinchi",
+    pvpDesc: "Do'stingiz bilan o'ynang",
+    pveLabel: "Kompyuterga qarshi",
+    pveDesc: "Sun'iy intellekt bilan kurashing",
+    sizeTitle: "MAYDON O'LCHAMI",
+    back: "< Orqaga",
+    playerX: "O'YINCHI X",
+    playerO: "O'YINCHI O",
+    computer: "KOMPYUTER",
+    turnX: "X NAVBATI",
+    turnO: "O NAVBATI",
+    xWins: "X YUTDI!",
+    oWins: "O YUTDI!",
+    draw: "DURRANG!",
+    congrats: "Tabriklaymiz",
+    drawSub: "Hech kim yutmadi",
+    playAgain: "? Qayta o'yna",
+    restart: "? Yangilash",
+    menu: "? Menyu",
+    thinking: "AI o'ylayapti",
+    gameTitle: "X va 0"
+  },
+  ru: {
+    tagline: "ÂÛÁÅÐÈÒÅ ÈÃÐÓ",
+    modeTitle: "ÐÅÆÈÌ ÈÃÐÛ",
+    pvpLabel: "2 Èãðîêà",
+    pvpDesc: "Èãðàéòå ñ äðóãîì",
+    pveLabel: "Ïðîòèâ êîìïüþòåðà",
+    pveDesc: "Ñðàçèòåñü ñ ÈÈ",
+    sizeTitle: "ÐÀÇÌÅÐ ÏÎËß",
+    back: "< Íàçàä",
+    playerX: "ÈÃÐÎÊ X",
+    playerO: "ÈÃÐÎÊ O",
+    computer: "ÊÎÌÏÜÞÒÅÐ",
+    turnX: "ÕÎÄ X",
+    turnO: "ÕÎÄ O",
+    xWins: "X ÏÎÁÅÄÈË!",
+    oWins: "O ÏÎÁÅÄÈË!",
+    draw: "ÍÈ×Üß!",
+    congrats: "Ïîçäðàâëÿåì",
+    drawSub: "Íèêòî íå ïîáåäèë",
+    playAgain: "? Èãðàòü ñíîâà",
+    restart: "? Ðåñòàðò",
+    menu: "? Ìåíþ",
+    thinking: "ÈÈ äóìàåò",
+    gameTitle: "X è O"
+  },
+  en: {
+    tagline: "CHOOSE YOUR GAME",
+    modeTitle: "GAME MODE",
+    pvpLabel: "2 Players",
+    pvpDesc: "Play against your friend",
+    pveLabel: "vs Computer",
+    pveDesc: "Challenge the AI",
+    sizeTitle: "BOARD SIZE",
+    back: "< Back",
+    playerX: "PLAYER X",
+    playerO: "PLAYER O",
+    computer: "COMPUTER",
+    turnX: "X'S TURN",
+    turnO: "O'S TURN",
+    xWins: "X WINS!",
+    oWins: "O WINS!",
+    draw: "DRAW!",
+    congrats: "Congratulations",
+    drawSub: "No winner this round",
+    playAgain: "? Play Again",
+    restart: "? Restart",
+    menu: "? Menu",
+    thinking: "AI thinking",
+    gameTitle: "X vs O"
+  }
+};
 
-canvas.width = window.innerWidth;
-canvas.height = window.innerHeight;
+// ===== AUDIO ENGINE =====
+let audioCtx = null;
+let musicNodes = {};
+let musicPlaying = false;
+let soundEnabled = true;
+let musicEnabled = true;
+let masterGain = null;
+let musicGain = null;
 
-const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+function initAudio() {
+  if (audioCtx) return;
+  audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  masterGain = audioCtx.createGain();
+  masterGain.gain.value = 0.7;
+  masterGain.connect(audioCtx.destination);
+  musicGain = audioCtx.createGain();
+  musicGain.gain.value = 0.18;
+  musicGain.connect(masterGain);
+}
 
-function playTone(freq, vol) {
+function resumeAudio() {
+  if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+}
+
+// --- Synth helpers ---
+function playTone(freq, type, duration, vol = 0.4, delay = 0, attack = 0.01, decay = 0.1) {
+  if (!audioCtx || !soundEnabled) return;
+  const t = audioCtx.currentTime + delay;
+  const osc = audioCtx.createOscillator();
+  const g = audioCtx.createGain();
+  osc.type = type;
+  osc.frequency.setValueAtTime(freq, t);
+  g.gain.setValueAtTime(0, t);
+  g.gain.linearRampToValueAtTime(vol, t + attack);
+  g.gain.exponentialRampToValueAtTime(0.001, t + attack + decay + duration);
+  osc.connect(g); g.connect(masterGain);
+  osc.start(t); osc.stop(t + attack + decay + duration + 0.05);
+}
+
+function playChord(freqs, type, duration, vol = 0.2, delay = 0) {
+  freqs.forEach(f => playTone(f, type, duration, vol, delay, 0.02, 0.15));
+}
+
+function playNoise(duration, vol = 0.1, delay = 0) {
+  if (!audioCtx || !soundEnabled) return;
+  const t = audioCtx.currentTime + delay;
+  const bufSize = audioCtx.sampleRate * duration;
+  const buf = audioCtx.createBuffer(1, bufSize, audioCtx.sampleRate);
+  const data = buf.getChannelData(0);
+  for (let i = 0; i < bufSize; i++) data[i] = (Math.random() * 2 - 1);
+  const src = audioCtx.createBufferSource();
+  const filter = audioCtx.createBiquadFilter();
+  filter.type = 'bandpass'; filter.frequency.value = 1200; filter.Q.value = 0.8;
+  const g = audioCtx.createGain();
+  g.gain.setValueAtTime(vol, t);
+  g.gain.exponentialRampToValueAtTime(0.001, t + duration);
+  src.buffer = buf;
+  src.connect(filter); filter.connect(g); g.connect(masterGain);
+  src.start(t); src.stop(t + duration + 0.05);
+}
+
+// --- SOUND EFFECTS ---
+function sfxClick() {
+  if (!soundEnabled) return;
+  playTone(880, 'sine', 0.05, 0.3, 0, 0.005, 0.08);
+  playTone(440, 'triangle', 0.08, 0.15, 0.04, 0.005, 0.1);
+}
+
+function sfxPlaceX() {
+  if (!soundEnabled) return;
+  // Sharp cyber click — rising
+  playTone(330, 'sawtooth', 0.04, 0.2, 0, 0.005, 0.05);
+  playTone(660, 'square', 0.04, 0.15, 0.03, 0.005, 0.06);
+  playTone(990, 'sine', 0.08, 0.25, 0.06, 0.01, 0.1);
+  playNoise(0.05, 0.08, 0);
+}
+
+function sfxPlaceO() {
+  if (!soundEnabled) return;
+  // Smooth round tone — falling
+  playTone(523, 'sine', 0.12, 0.3, 0, 0.01, 0.15);
+  playTone(392, 'sine', 0.1, 0.2, 0.05, 0.01, 0.12);
+  playTone(261, 'triangle', 0.08, 0.15, 0.1, 0.01, 0.1);
+}
+
+function sfxWin() {
+  if (!soundEnabled) return;
+  // Victory fanfare
+  const melody = [523, 659, 784, 1047];
+  melody.forEach((f, i) => {
+    playTone(f, 'sine', 0.15, 0.35, i * 0.12, 0.01, 0.2);
+    playTone(f * 1.5, 'triangle', 0.08, 0.12, i * 0.12 + 0.05, 0.01, 0.1);
+  });
+  // Final chord
+  playChord([523, 659, 784, 1047], 'sine', 0.5, 0.2, 0.6);
+  playNoise(0.08, 0.12, 0.58);
+}
+
+function sfxDraw() {
+  if (!soundEnabled) return;
+  // Neutral resolution
+  playTone(440, 'sine', 0.1, 0.25, 0, 0.01, 0.15);
+  playTone(370, 'sine', 0.1, 0.2, 0.15, 0.01, 0.15);
+  playTone(330, 'triangle', 0.2, 0.2, 0.3, 0.01, 0.25);
+}
+
+function sfxHover() {
+  if (!soundEnabled) return;
+  playTone(1200, 'sine', 0.02, 0.06, 0, 0.002, 0.02);
+}
+
+function sfxNav() {
+  if (!soundEnabled) return;
+  playTone(660, 'sine', 0.04, 0.15, 0, 0.005, 0.06);
+  playTone(880, 'sine', 0.04, 0.12, 0.06, 0.005, 0.06);
+}
+
+function sfxBack() {
+  if (!soundEnabled) return;
+  playTone(880, 'sine', 0.04, 0.15, 0, 0.005, 0.06);
+  playTone(660, 'sine', 0.04, 0.12, 0.06, 0.005, 0.06);
+}
+
+function sfxGameStart() {
+  if (!soundEnabled) return;
+  [261, 330, 392, 523].forEach((f, i) => playTone(f, 'triangle', 0.1, 0.2, i * 0.08, 0.01, 0.12));
+}
+
+// --- BACKGROUND MUSIC (ambient cyber loop) ---
+let musicTimers = [];
+let musicBeat = 0;
+const BPM = 90;
+const BEAT = 60 / BPM;
+
+function startMusic() {
+  if (!audioCtx || !musicEnabled || musicPlaying) return;
+  musicPlaying = true;
+  scheduleMusicLoop();
+}
+
+function stopMusic() {
+  musicPlaying = false;
+  musicTimers.forEach(t => clearTimeout(t));
+  musicTimers = [];
+}
+
+function scheduleMusicLoop() {
+  if (!musicPlaying || !musicEnabled) return;
+  playMusicBar();
+  const loopTime = BEAT * 8 * 1000;
+  const t = setTimeout(() => scheduleMusicLoop(), loopTime);
+  musicTimers.push(t);
+}
+
+function musicNote(freq, startBeat, durBeats, vol = 0.12, type = 'sine') {
+  if (!audioCtx || !musicEnabled) return;
+  const now = audioCtx.currentTime;
+  const t = now + startBeat * BEAT;
+  const osc = audioCtx.createOscillator();
+  const g = audioCtx.createGain();
+  osc.type = type;
+  osc.frequency.setValueAtTime(freq, t);
+  g.gain.setValueAtTime(0, t);
+  g.gain.linearRampToValueAtTime(vol, t + 0.02);
+  g.gain.setValueAtTime(vol * 0.7, t + durBeats * BEAT * 0.6);
+  g.gain.linearRampToValueAtTime(0, t + durBeats * BEAT);
+  osc.connect(g); g.connect(musicGain);
+  osc.start(t); osc.stop(t + durBeats * BEAT + 0.05);
+}
+
+function playMusicBar() {
+  if (!audioCtx || !musicEnabled || !musicPlaying) return;
+
+  // Bass line — deep pulse
+  const bassNotes = [55, 55, 82, 73, 55, 55, 65, 61];
+  bassNotes.forEach((f, i) => musicNote(f, i, 0.85, 0.14, 'triangle'));
+
+  // Chord pads — slow evolving
+  const pads = [[220, 277, 330], [196, 247, 294], [220, 277, 370], [185, 233, 311]];
+  pads.forEach((chord, i) => chord.forEach(f => musicNote(f, i * 2, 1.8, 0.05, 'sine')));
+
+  // Arpeggio melody — cyber sparkle
+  const arp = [440, 554, 659, 880, 659, 554, 440, 523, 659, 784, 659, 523, 440, 392, 330, 440];
+  arp.forEach((f, i) => musicNote(f, i * 0.5, 0.4, 0.06, 'sine'));
+
+  // Hi-hat rhythm
+  for (let i = 0; i < 16; i++) {
+    if (i % 2 === 0) {
+      const t2 = audioCtx.currentTime + i * BEAT * 0.5;
+      const bufSize = Math.ceil(audioCtx.sampleRate * 0.04);
+      const buf = audioCtx.createBuffer(1, bufSize, audioCtx.sampleRate);
+      const data = buf.getChannelData(0);
+      for (let j = 0; j < bufSize; j++) data[j] = (Math.random() * 2 - 1) * Math.exp(-j / (bufSize * 0.3));
+      const src = audioCtx.createBufferSource();
+      const filt = audioCtx.createBiquadFilter();
+      filt.type = 'highpass'; filt.frequency.value = 8000;
+      const g = audioCtx.createGain();
+      g.gain.value = i % 4 === 0 ? 0.12 : 0.06;
+      src.buffer = buf;
+      src.connect(filt); filt.connect(g); g.connect(musicGain);
+      src.start(t2);
+    }
+  }
+
+  // Kick drum on beats 1 & 5
+  [0, 4].forEach(beat => {
+    const t3 = audioCtx.currentTime + beat * BEAT;
     const osc = audioCtx.createOscillator();
     const g = audioCtx.createGain();
-    osc.type = 'sine';
-    osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
-    g.gain.setValueAtTime(vol, audioCtx.currentTime);
-    g.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 1);
-    osc.connect(g); g.connect(audioCtx.destination);
-    osc.start(); osc.stop(audioCtx.currentTime + 1);
+    osc.frequency.setValueAtTime(150, t3);
+    osc.frequency.exponentialRampToValueAtTime(40, t3 + 0.15);
+    g.gain.setValueAtTime(0.5, t3);
+    g.gain.exponentialRampToValueAtTime(0.001, t3 + 0.2);
+    osc.connect(g); g.connect(musicGain);
+    osc.start(t3); osc.stop(t3 + 0.25);
+  });
 }
 
-function draw(e) {
-    if (!drawing) return;
-    if (audioCtx.state === 'suspended') audioCtx.resume();
+// --- SOUND TOGGLE UI ---
+function toggleSound() {
+  soundEnabled = !soundEnabled;
+  document.getElementById('soundBtn').textContent = soundEnabled ? '??' : '??';
+  if (soundEnabled) sfxClick();
+}
 
-    const x = e.clientX || e.touches[0].clientX;
-    const y = e.clientY || e.touches[0].clientY;
+function toggleMusic() {
+  musicEnabled = !musicEnabled;
+  document.getElementById('musicBtn').textContent = musicEnabled ? '??' : '??';
+  document.getElementById('musicBtn').style.opacity = musicEnabled ? '1' : '0.4';
+  if (musicEnabled) {
+    musicPlaying = false;
+    startMusic();
+  } else {
+    stopMusic();
+  }
+}
 
-    const centerX = canvas.width / 2;
-    const centerY = canvas.height / 2;
+// ===== STATE =====
+let lang = 'en';
+let mode = 'pvp'; // pvp | pve
+let boardSize = 3;
+let board = [];
+let currentPlayer = 'X';
+let gameOver = false;
+let scores = { X: 0, O: 0 };
+let aiThinking = false;
 
-    const relX = x - centerX;
-    const relY = y - centerY;
+// ===== NAVIGATION =====
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
 
-    // Tezlikka asoslangan ovoz va rang
-    const speed = Math.sqrt(e.movementX**2 + e.movementY**2) || 5;
-    hue = (hue + 0.5) % 360;
-    
-    ctx.lineWidth = 2;
-    ctx.lineCap = 'round';
-    ctx.strokeStyle = `hsla(${hue}, 80%, 60%, 0.3)`;
-    ctx.shadowBlur = 5;
-    ctx.shadowColor = `hsl(${hue}, 80%, 60%)`;
+function selectLang(l) {
+  initAudio();
+  resumeAudio();
+  sfxNav();
+  lang = l;
+  applyLang();
+  showScreen('modeScreen');
+  setTimeout(() => startMusic(), 300);
+}
 
-    for (let i = 0; i < segments; i++) {
-        ctx.save();
-        ctx.translate(centerX, centerY);
-        ctx.rotate((i * 2 * Math.PI) / segments);
-        
-        ctx.beginPath();
-        ctx.moveTo(relX, relY);
-        ctx.lineTo(relX - (e.movementX || 0), relY - (e.movementY || 0));
-        ctx.stroke();
-        
-        // Ko'zgu effekti
-        ctx.scale(1, -1);
-        ctx.beginPath();
-        ctx.moveTo(relX, relY);
-        ctx.lineTo(relX - (e.movementX || 0), relY - (e.movementY || 0));
-        ctx.stroke();
-        
-        ctx.restore();
+function selectMode(m) {
+  sfxNav();
+  mode = m;
+  showScreen('sizeScreen');
+}
+
+function applyLang() {
+  const t = T[lang];
+  document.getElementById('tagline').textContent = t.tagline;
+  document.getElementById('modeTitle').textContent = t.modeTitle;
+  document.getElementById('pvpLabel').textContent = t.pvpLabel;
+  document.getElementById('pvpDesc').textContent = t.pvpDesc;
+  document.getElementById('pveLabel').textContent = t.pveLabel;
+  document.getElementById('pveDesc').textContent = t.pveDesc;
+  document.getElementById('sizeTitle').textContent = t.sizeTitle;
+  document.getElementById('backBtn1').textContent = t.back;
+  document.getElementById('backBtn2').textContent = t.back;
+  document.getElementById('gameTitle').textContent = t.gameTitle;
+  document.getElementById('restartBtn').textContent = t.restart;
+  document.getElementById('menuBtn').textContent = t.menu;
+  document.getElementById('playAgainBtn').textContent = t.playAgain;
+  document.getElementById('thinkingText').textContent = t.thinking;
+}
+
+// ===== GAME LOGIC =====
+function startGame(size) {
+  sfxNav();
+  boardSize = size;
+  scores = { X: 0, O: 0 };
+  applyLang();
+  updateScoreLabels();
+  initBoard();
+  showScreen('gameScreen');
+  setTimeout(() => sfxGameStart(), 100);
+}
+
+function initBoard() {
+  board = Array(boardSize * boardSize).fill('');
+  currentPlayer = 'X';
+  gameOver = false;
+  aiThinking = false;
+  document.getElementById('resultOverlay').classList.remove('show');
+  document.getElementById('thinking').classList.remove('show');
+  renderBoard();
+  updateTurnIndicator();
+  updateScores();
+}
+
+function renderBoard() {
+  const el = document.getElementById('board');
+  el.className = `board size${boardSize}`;
+  el.innerHTML = '';
+  board.forEach((val, i) => {
+    const cell = document.createElement('div');
+    cell.className = 'cell' + (val ? ' taken' : '');
+    cell.onclick = () => handleClick(i);
+    if (val) {
+      const mark = document.createElement('span');
+      mark.className = `mark ${val.toLowerCase()}`;
+      mark.textContent = val;
+      cell.appendChild(mark);
     }
-    
-    if(Math.random() < 0.1) playTone(200 + (hue * 2), 0.02);
+    el.appendChild(cell);
+  });
 }
 
-function clearCanvas() {
-    ctx.fillStyle = '#000';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
+function handleClick(idx) {
+  if (gameOver || board[idx] || aiThinking) return;
+  makeMove(idx);
 }
 
-function saveArt() {
-    const link = document.createElement('a');
-    link.download = 'my-soul-mandala.png';
-    link.href = canvas.toDataURL();
-    link.click();
+function makeMove(idx) {
+  board[idx] = currentPlayer;
+  if (currentPlayer === 'X') sfxPlaceX(); else sfxPlaceO();
+  renderBoard();
+
+  const winCells = checkWin();
+  if (winCells) {
+    highlightWin(winCells);
+    scores[currentPlayer]++;
+    updateScores();
+    setTimeout(() => { sfxWin(); showResult(currentPlayer + '_WIN'); }, 300);
+    gameOver = true;
+    return;
+  }
+  if (board.every(c => c)) {
+    setTimeout(() => { sfxDraw(); showResult('DRAW'); }, 200);
+    gameOver = true;
+    return;
+  }
+
+  currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
+  updateTurnIndicator();
+
+  if (mode === 'pve' && currentPlayer === 'O') {
+    aiThinking = true;
+    document.getElementById('thinking').classList.add('show');
+    setTimeout(() => {
+      aiMove();
+      document.getElementById('thinking').classList.remove('show');
+      aiThinking = false;
+    }, 600 + Math.random() * 400);
+  }
 }
 
-window.addEventListener('mousedown', () => drawing = true);
-window.addEventListener('mouseup', () => drawing = false);
-window.addEventListener('mousemove', draw);
-window.addEventListener('touchstart', () => drawing = true);
-window.addEventListener('touchend', () => drawing = false);
-window.addEventListener('touchmove', draw);
+function aiMove() {
+  if (gameOver) return;
+  let idx;
+  if (boardSize === 3) {
+    idx = minimax(board, 'O').index;
+  } else {
+    idx = aiMove5x5();
+  }
+  if (idx !== undefined && idx !== null) makeMove(idx);
+}
 
-clearCanvas();
+// 3x3 minimax
+function minimax(b, player, depth = 0) {
+  const win = checkWinBoard(b, boardSize);
+  if (win === 'O') return { score: 10 - depth };
+  if (win === 'X') return { score: depth - 10 };
+  const empty = b.map((v, i) => v === '' ? i : -1).filter(i => i !== -1);
+  if (!empty.length) return { score: 0 };
+
+  if (depth > 6) return { score: 0, index: empty[Math.floor(Math.random() * empty.length)] };
+
+  const moves = [];
+  for (const i of empty) {
+    const nb = [...b];
+    nb[i] = player;
+    const result = minimax(nb, player === 'O' ? 'X' : 'O', depth + 1);
+    moves.push({ index: i, score: result.score });
+  }
+  return player === 'O'
+    ? moves.reduce((a, b) => b.score > a.score ? b : a)
+    : moves.reduce((a, b) => b.score < a.score ? b : a);
+}
+
+// 5x5 smart AI
+function aiMove5x5() {
+  const empty = board.map((v, i) => v === '' ? i : -1).filter(i => i !== -1);
+  // Win
+  for (const i of empty) {
+    const b2 = [...board]; b2[i] = 'O';
+    if (checkWinBoard(b2, boardSize)) return i;
+  }
+  // Block
+  for (const i of empty) {
+    const b2 = [...board]; b2[i] = 'X';
+    if (checkWinBoard(b2, boardSize)) return i;
+  }
+  // Center
+  const center = Math.floor(boardSize * boardSize / 2);
+  if (!board[center]) return center;
+  // Score positions
+  let best = -1, bestScore = -1;
+  for (const i of empty) {
+    const s = posScore(i, boardSize);
+    if (s > bestScore) { bestScore = s; best = i; }
+  }
+  return best !== -1 ? best : empty[Math.floor(Math.random() * empty.length)];
+}
+
+function posScore(i, size) {
+  const r = Math.floor(i / size), c = i % size;
+  const mid = Math.floor(size / 2);
+  return -(Math.abs(r - mid) + Math.abs(c - mid));
+}
+
+function checkWin() {
+  return checkWinBoard(board, boardSize, true);
+}
+
+function checkWinBoard(b, size, returnCells = false) {
+  const winLen = size === 3 ? 3 : 4;
+  const lines = [];
+  // Rows
+  for (let r = 0; r < size; r++) {
+    for (let c = 0; c <= size - winLen; c++) {
+      const line = [];
+      for (let k = 0; k < winLen; k++) line.push(r * size + c + k);
+      lines.push(line);
+    }
+  }
+  // Cols
+  for (let c = 0; c < size; c++) {
+    for (let r = 0; r <= size - winLen; r++) {
+      const line = [];
+      for (let k = 0; k < winLen; k++) line.push((r + k) * size + c);
+      lines.push(line);
+    }
+  }
+  // Diag ?
+  for (let r = 0; r <= size - winLen; r++) {
+    for (let c = 0; c <= size - winLen; c++) {
+      const line = [];
+      for (let k = 0; k < winLen; k++) line.push((r + k) * size + (c + k));
+      lines.push(line);
+    }
+  }
+  // Diag ?
+  for (let r = 0; r <= size - winLen; r++) {
+    for (let c = winLen - 1; c < size; c++) {
+      const line = [];
+      for (let k = 0; k < winLen; k++) line.push((r + k) * size + (c - k));
+      lines.push(line);
+    }
+  }
+  for (const line of lines) {
+    const vals = line.map(i => b[i]);
+    if (vals[0] && vals.every(v => v === vals[0])) {
+      return returnCells ? line : vals[0];
+    }
+  }
+  return null;
+}
+
+function highlightWin(cells) {
+  const cellEls = document.getElementById('board').children;
+  cells.forEach(i => cellEls[i].classList.add('winning'));
+}
+
+function updateTurnIndicator() {
+  const t = T[lang];
+  const el = document.getElementById('turnIndicator');
+  el.className = `turn-indicator ${currentPlayer.toLowerCase()}-turn`;
+  if (currentPlayer === 'X') {
+    el.textContent = t.turnX;
+  } else {
+    el.textContent = mode === 'pve' ? (t.turnO || 'O TURN') : t.turnO;
+  }
+}
+
+function updateScoreLabels() {
+  const t = T[lang];
+  document.getElementById('playerXLabel').textContent = t.playerX;
+  document.getElementById('playerOLabel').textContent = mode === 'pve' ? t.computer : t.playerO;
+}
+
+function updateScores() {
+  document.getElementById('scoreX').textContent = scores.X;
+  document.getElementById('scoreO').textContent = scores.O;
+}
+
+function showResult(type) {
+  const t = T[lang];
+  const overlay = document.getElementById('resultOverlay');
+  const text = document.getElementById('resultText');
+  const sub = document.getElementById('resultSub');
+  overlay.classList.add('show');
+  if (type === 'X_WIN') {
+    text.textContent = t.xWins;
+    text.className = 'result-text x-win';
+    sub.textContent = t.congrats;
+  } else if (type === 'O_WIN') {
+    text.textContent = t.oWins;
+    text.className = 'result-text o-win';
+    sub.textContent = t.congrats;
+  } else {
+    text.textContent = t.draw;
+    text.className = 'result-text draw';
+    sub.textContent = t.drawSub;
+  }
+}
+
+function restartGame() {
+  sfxGameStart();
+  initBoard();
+  updateScoreLabels();
+}
 </script>
 </body>
 </html>
